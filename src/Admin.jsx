@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Upload, Trash2, LogOut } from 'lucide-react';
 import './Admin.css';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 function Admin() {
   const [token, setToken] = useState(localStorage.getItem('token'));

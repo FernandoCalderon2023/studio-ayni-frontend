@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles } from 'lucide-react';
 import './App.css';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
