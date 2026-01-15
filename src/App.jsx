@@ -3,6 +3,7 @@ import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
+const BASE_URL = API_URL.replace('/api', '');
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -25,120 +26,7 @@ function App() {
   });
   const productsPerPage = 12;
 
-  const [productos, setProductos] = useState([
-    // HOGAR
-    {
-      id: 1,
-      nombre: "Maceta Geométrica",
-      categoria: "hogar",
-      precio: 15.00,
-      imagen: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80",
-      descripcion: "Maceta moderna con diseño geométrico, perfecta para suculentas",
-      novedad: true,
-      colores: [
-        { nombre: "Verde", hex: "#6B7F3C", imagen: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80" },
-        { nombre: "Terracota", hex: "#C67B5C", imagen: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80" },
-        { nombre: "Beige", hex: "#E8DCC4", imagen: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80" },
-        { nombre: "Negro", hex: "#2A2A2A", imagen: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80" }
-      ]
-    },
-    {
-      id: 2,
-      nombre: "Lámpara Decorativa",
-      categoria: "hogar",
-      precio: 28.00,
-      imagen: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80",
-      descripcion: "Lámpara de mesa con diseño minimalista y acabado natural",
-      novedad: true,
-      colores: [
-        { nombre: "Blanco", hex: "#FFFFFF", imagen: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80" },
-        { nombre: "Negro", hex: "#2A2A2A", imagen: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80" },
-        { nombre: "Gris", hex: "#9B9B9B", imagen: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&q=80" }
-      ]
-    },
-    {
-      id: 3,
-      nombre: "Porta Velas Set x3",
-      categoria: "hogar",
-      precio: 22.00,
-      imagen: "https://images.unsplash.com/photo-1602874801006-94c0cf6e0ca3?w=500&q=80",
-      descripcion: "Set de portavelas con formas orgánicas en tonos tierra",
-      novedad: true,
-      colores: [
-        { nombre: "Terracota", hex: "#C67B5C", imagen: "https://images.unsplash.com/photo-1602874801006-94c0cf6e0ca3?w=500&q=80" },
-        { nombre: "Beige", hex: "#E8DCC4", imagen: "https://images.unsplash.com/photo-1602874801006-94c0cf6e0ca3?w=500&q=80" },
-        { nombre: "Verde", hex: "#6B7F3C", imagen: "https://images.unsplash.com/photo-1602874801006-94c0cf6e0ca3?w=500&q=80" }
-      ]
-    },
-    
-    // ORGANIZADORES
-    {
-      id: 4,
-      nombre: "Organizador de Escritorio",
-      categoria: "organizadores",
-      precio: 18.00,
-      imagen: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=500&q=80",
-      descripcion: "Módulos apilables para lápices, clips y accesorios de oficina",
-      novedad: true,
-      colores: [
-        { nombre: "Gris", hex: "#9B9B9B", imagen: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=500&q=80" },
-        { nombre: "Negro", hex: "#2A2A2A", imagen: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=500&q=80" },
-        { nombre: "Blanco", hex: "#FFFFFF", imagen: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=500&q=80" }
-      ]
-    },
-    {
-      id: 5,
-      nombre: "Caja Organizadora Multi-uso",
-      categoria: "organizadores",
-      precio: 12.00,
-      imagen: "https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?w=500&q=80",
-      descripcion: "Caja con divisiones ajustables, ideal para cables y pequeños objetos",
-      novedad: true,
-      colores: [
-        { nombre: "Negro", hex: "#2A2A2A", imagen: "https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?w=500&q=80" },
-        { nombre: "Azul", hex: "#4A90E2", imagen: "https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?w=500&q=80" }
-      ]
-    },
-    {
-      id: 6,
-      nombre: "Organizador de Cocina",
-      categoria: "organizadores",
-      precio: 25.00,
-      imagen: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500&q=80",
-      descripcion: "Sistema modular para especias y utensilios de cocina",
-      colores: [
-        { nombre: "Blanco", hex: "#FFFFFF", imagen: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500&q=80" },
-        { nombre: "Beige", hex: "#E8DCC4", imagen: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=500&q=80" }
-      ]
-    },
-
-    // JOYERÍA
-    {
-      id: 7,
-      nombre: "Aretes Geométricos",
-      categoria: "joyeria",
-      precio: 8.00,
-      imagen: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80",
-      descripcion: "Aretes ligeros con diseño hexagonal en acabado mate",
-      colores: [
-        { nombre: "Oro", hex: "#D4AF37", imagen: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80" },
-        { nombre: "Plata", hex: "#C0C0C0", imagen: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80" },
-        { nombre: "Negro", hex: "#2A2A2A", imagen: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&q=80" }
-      ]
-    },
-    {
-      id: 8,
-      nombre: "Collar Minimalista",
-      categoria: "joyeria",
-      precio: 12.00,
-      imagen: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=500&q=80",
-      descripcion: "Collar con dije geométrico, disponible en varios colores",
-      colores: [
-        { nombre: "Oro", hex: "#D4AF37", imagen: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=500&q=80" },
-        { nombre: "Plata", hex: "#C0C0C0", imagen: "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=500&q=80" }
-      ]
-    }
-  ]);
+  const [productos, setProductos] = useState([]);
 
   // Cargar productos desde el backend
   useEffect(() => {
@@ -402,7 +290,7 @@ function App() {
               >
                 <div className="novedad-badge">NUEVO</div>
                 <img 
-                  src={producto.imagen?.startsWith('http') ? producto.imagen : `http://localhost:3001${producto.imagen}`} 
+                  src={producto.imagen?.startsWith('http') ? producto.imagen : `${BASE_URL}${producto.imagen}`} 
                   alt={producto.nombre} 
                 />
                 <div className="novedad-info">
@@ -432,61 +320,69 @@ function App() {
 
       {/* Products */}
       <section className="products">
-        <div className="product-grid">
-          {currentProducts.map((producto) => (
-            <div key={producto.id} className="product-card">
-              <img 
-                src={producto.imagen?.startsWith('http') ? producto.imagen : `http://localhost:3001${producto.imagen}`} 
-                alt={producto.nombre} 
-                className="product-image" 
-                onClick={() => openProductModal(producto)}
-              />
-              <div className="product-info">
-                <h3 className="product-name">{producto.nombre}</h3>
-                <p className="product-description">{producto.descripcion}</p>
-                <div className="product-footer">
-                  <span className="product-price">Bs {producto.precio.toFixed(2)}</span>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={() => openProductModal(producto)}
-                  >
-                    AGREGAR
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                className={`pagination-number ${currentPage === index + 1 ? 'active' : ''}`}
-                onClick={() => paginate(index + 1)}
-              >
-                {index + 1}
-              </button>
-            ))}
-
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight size={20} />
-            </button>
+        {productos.length === 0 ? (
+          <div className="empty-products">
+            <p>No hay productos disponibles. ¡Agrega productos desde el panel admin!</p>
           </div>
+        ) : (
+          <>
+            <div className="product-grid">
+              {currentProducts.map((producto) => (
+                <div key={producto.id} className="product-card">
+                  <img 
+                    src={producto.imagen?.startsWith('http') ? producto.imagen : `${BASE_URL}${producto.imagen}`} 
+                    alt={producto.nombre} 
+                    className="product-image" 
+                    onClick={() => openProductModal(producto)}
+                  />
+                  <div className="product-info">
+                    <h3 className="product-name">{producto.nombre}</h3>
+                    <p className="product-description">{producto.descripcion}</p>
+                    <div className="product-footer">
+                      <span className="product-price">Bs {producto.precio.toFixed(2)}</span>
+                      <button 
+                        className="add-to-cart-btn"
+                        onClick={() => openProductModal(producto)}
+                      >
+                        AGREGAR
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button 
+                  className="pagination-btn"
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    className={`pagination-number ${currentPage === index + 1 ? 'active' : ''}`}
+                    onClick={() => paginate(index + 1)}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                <button 
+                  className="pagination-btn"
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 
@@ -558,7 +454,7 @@ function App() {
                   <img 
                     src={(selectedColor ? selectedColor.imagen : selectedProduct.imagen)?.startsWith('http') ? 
                          (selectedColor ? selectedColor.imagen : selectedProduct.imagen) : 
-                         `http://localhost:3001${selectedColor ? selectedColor.imagen : selectedProduct.imagen}`} 
+                         `${BASE_URL}${selectedColor ? selectedColor.imagen : selectedProduct.imagen}`} 
                     alt={selectedProduct.nombre} 
                     className="modal-image"
                   />
