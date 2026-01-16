@@ -1,252 +1,185 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles } from 'lucide-react';
-import './App.css';
+import { 
+  Search, 
+  ShoppingCart, 
+  X, 
+  Plus, 
+  Minus, 
+  ChevronLeft, 
+  ChevronRight,
+  Instagram,
+  Facebook,
+  MessageCircle,
+  Mail
+} from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
 
 function App() {
-  const [cartItems, setCartItems] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('todos');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [cartOpen, setCartOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [novedadesScroll, setNovedadesScroll] = useState(0);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [checkoutData, setCheckoutData] = useState({
-    nombre: '',
-    telefono: '',
-    direccion: '',
-    ciudad: '',
-    referencia: '',
-    metodoPago: 'efectivo'
-  });
-  const productsPerPage = 12;
+  const [productos, setProductos] = useState([]);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [categoriaActiva, setCategoriaActiva] = useState('Todo');
+  const [busqueda, setBusqueda] = useState('');
+  const [carrito, setCarrito] = useState([]);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+  const [colorSeleccionado, setColorSeleccionado] = useState(null);
+  const [mostrarCarrito, setMostrarCarrito] = useState(false);
+  const [mostrarCheckout, setMostrarCheckout] = useState(false);
+  const [scrollCarrusel, setScrollCarrusel] = useState(0);
 
-  const [productos, setProductos] = useState([
-    // HOGAR
-    
-  ]);
+  const categorias = ['Todo', 'Hogar', 'Organizadores', 'Joyería', 'Maquillaje', 'Bebés', 'Gadgets'];
 
-  // Cargar productos desde el backend
   useEffect(() => {
-    fetch(`${API_URL}/productos`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          setProductos(data);
-        }
-      })
-      .catch(err => console.error('Error cargando productos:', err));
+    cargarProductos();
   }, []);
 
-  const categorias = [
-    { id: 'todos', nombre: 'Todo' },
-    { id: 'hogar', nombre: 'Hogar' },
-    { id: 'organizadores', nombre: 'Organizadores' },
-    { id: 'joyeria', nombre: 'Joyería' },
-    { id: 'maquillaje', nombre: 'Maquillaje' },
-    { id: 'bebes', nombre: 'Bebés' },
-    { id: 'gadgets', nombre: 'Gadgets' }
-  ];
+  useEffect(() => {
+    filtrarProductos();
+  }, [productos, categoriaActiva, busqueda]);
 
-  // Productos destacados (novedades)
-  const productosDestacados = productos.filter(p => p.novedad).slice(0, 5);
-
-  // Navegación del carrusel de novedades
-  const scrollNovedades = (direction) => {
-    const container = document.querySelector('.novedades-carousel');
-    if (container) {
-      const scrollAmount = 280; // Ancho de una tarjeta + gap
-      const newScroll = direction === 'left' 
-        ? Math.max(0, novedadesScroll - scrollAmount)
-        : Math.min(container.scrollWidth - container.clientWidth, novedadesScroll + scrollAmount);
-      
-      container.scrollTo({ left: newScroll, behavior: 'smooth' });
-      setNovedadesScroll(newScroll);
+  const cargarProductos = async () => {
+    try {
+      const response = await fetch(`${API_URL}/productos`);
+      const data = await response.json();
+      setProductos(data);
+    } catch (error) {
+      console.error('Error cargando productos:', error);
     }
   };
 
-  // Abrir modal y setear primer color por defecto
-  const openProductModal = (producto) => {
-    setSelectedProduct(producto);
-    setSelectedColor(producto.colores ? producto.colores[0] : null);
-    setQuantity(1);
-  };
+  const filtrarProductos = () => {
+    let filtrados = productos;
 
-  // Cerrar modal y resetear
-  const closeProductModal = () => {
-    setSelectedProduct(null);
-    setSelectedColor(null);
-    setQuantity(1);
-  };
-
-  // Cambiar cantidad
-  const incrementQuantity = () => setQuantity(prev => prev + 1);
-  const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
-
-  // Precio con descuento por cantidad
-  const getPrecioConDescuento = (precioBase, cant) => {
-    if (cant >= 12) {
-      return precioBase * 0.9; // 10% descuento
+    if (categoriaActiva !== 'Todo') {
+      filtrados = filtrados.filter(p => p.categoria === categoriaActiva);
     }
-    return precioBase;
+
+    if (busqueda.trim()) {
+      filtrados = filtrados.filter(p =>
+        p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+        p.descripcion.toLowerCase().includes(busqueda.toLowerCase())
+      );
+    }
+
+    setProductosFiltrados(filtrados);
   };
 
-  // Filtrar productos
-  const productosFiltrados = productos.filter(producto => {
-    const matchCategoria = selectedCategory === 'todos' || producto.categoria === selectedCategory;
-    const matchBusqueda = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategoria && matchBusqueda;
-  });
+  const productosDestacados = productos.filter(p => p.novedad);
 
-  // Calcular paginación
-  const totalPages = Math.ceil(productosFiltrados.length / productsPerPage);
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = productosFiltrados.slice(indexOfFirstProduct, indexOfLastProduct);
-
-  // Cambiar de página
-  const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const abrirDetalleProducto = (producto) => {
+    setProductoSeleccionado(producto);
+    setColorSeleccionado(producto.colores && producto.colores.length > 0 ? producto.colores[0] : null);
   };
 
-  // Resetear a página 1 cuando cambia categoría o búsqueda
-  const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
-    setCurrentPage(1);
+  const cerrarDetalleProducto = () => {
+    setProductoSeleccionado(null);
+    setColorSeleccionado(null);
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const addToCart = (producto, colorSeleccionado, cantidad) => {
-    const precioFinal = getPrecioConDescuento(producto.precio, cantidad);
-    const productoConDetalles = {
+  const agregarAlCarrito = (producto, cantidad = 1) => {
+    const color = colorSeleccionado || { nombre: 'Por defecto', hex: '#FFFFFF' };
+    const productoCarrito = {
       ...producto,
-      colorSeleccionado: colorSeleccionado ? colorSeleccionado.nombre : null,
-      precioUnitario: precioFinal,
-      cantidad: cantidad
+      cantidad,
+      color: color.nombre,
+      colorHex: color.hex,
+      precioUnitario: producto.precio
     };
-    
-    const existing = cartItems.find(item => 
-      item.id === producto.id && 
-      item.colorSeleccionado === productoConDetalles.colorSeleccionado
+
+    const existe = carrito.find(
+      item => item.id === producto.id && item.color === color.nombre
     );
-    
-    if (existing) {
-      setCartItems(cartItems.map(item =>
-        item.id === producto.id && item.colorSeleccionado === productoConDetalles.colorSeleccionado
-          ? { ...item, cantidad: item.cantidad + cantidad, precioUnitario: getPrecioConDescuento(producto.precio, item.cantidad + cantidad) }
+
+    if (existe) {
+      setCarrito(carrito.map(item =>
+        item.id === producto.id && item.color === color.nombre
+          ? { ...item, cantidad: item.cantidad + cantidad }
           : item
       ));
     } else {
-      setCartItems([...cartItems, productoConDetalles]);
+      setCarrito([...carrito, productoCarrito]);
     }
-    
-    closeProductModal();
+
+    cerrarDetalleProducto();
   };
 
-  const removeFromCart = (id, colorSeleccionado) => {
-    setCartItems(cartItems.filter(item => 
-      !(item.id === id && item.colorSeleccionado === colorSeleccionado)
+  const actualizarCantidad = (id, color, nuevaCantidad) => {
+    if (nuevaCantidad < 1) {
+      eliminarDelCarrito(id, color);
+      return;
+    }
+    setCarrito(carrito.map(item =>
+      item.id === id && item.color === color
+        ? { ...item, cantidad: nuevaCantidad }
+        : item
     ));
   };
 
-  const updateQuantity = (id, colorSeleccionado, cantidad) => {
-    if (cantidad <= 0) {
-      removeFromCart(id, colorSeleccionado);
-    } else {
-      setCartItems(cartItems.map(item => {
-        if (item.id === id && item.colorSeleccionado === colorSeleccionado) {
-          const precioActualizado = getPrecioConDescuento(item.precio, cantidad);
-          return { ...item, cantidad, precioUnitario: precioActualizado };
-        }
-        return item;
-      }));
-    }
+  const eliminarDelCarrito = (id, color) => {
+    setCarrito(carrito.filter(item => !(item.id === id && item.color === color)));
   };
 
-  const total = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
-
-  // Sistema de checkout
-  const handleCheckoutSubmit = async (e) => {
-    e.preventDefault();
-    
-    const pedido = {
-      cliente: checkoutData,
-      productos: cartItems,
-      total: total,
-      fecha: new Date().toISOString()
+  const calcularTotal = () => {
+    const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    const totalUnidades = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+    const descuento = totalUnidades >= 12 ? subtotal * 0.10 : 0;
+    return {
+      subtotal,
+      descuento,
+      total: subtotal - descuento,
+      totalUnidades
     };
-
-    // Enviar pedido al backend
-    try {
-      const response = await fetch(`${API_URL}/pedidos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pedido)
-      });
-
-      if (response.ok) {
-        alert('¡Pedido realizado con éxito! Te contactaremos pronto.');
-        setCartItems([]);
-        setCheckoutOpen(false);
-        setCheckoutData({
-          nombre: '',
-          telefono: '',
-          direccion: '',
-          ciudad: '',
-          referencia: '',
-          metodoPago: 'efectivo'
-        });
-      }
-    } catch (error) {
-      console.error('Error al realizar pedido:', error);
-    }
   };
 
-  const enviarPedidoWhatsApp = () => {
-    const mensaje = cartItems.map(item => {
-      const colorInfo = item.colorSeleccionado ? ` (${item.colorSeleccionado})` : '';
-      const descuento = item.cantidad >= 12 ? ' [10% DESC]' : '';
-      return `${item.cantidad}x ${item.nombre}${colorInfo}${descuento} - Bs ${(item.precioUnitario * item.cantidad).toFixed(2)}`;
-    }).join('\n');
-    const mensajeTotal = `*PEDIDO STUDIO AYNI*\n\n${mensaje}\n\n*Total: Bs ${total.toFixed(2)}*`;
-    const url = `https://wa.me/59176543210?text=${encodeURIComponent(mensajeTotal)}`;
-    window.open(url, '_blank');
+  const scrollCarruselIzquierda = () => {
+    setScrollCarrusel(Math.max(0, scrollCarrusel - 1));
   };
+
+  const scrollCarruselDerecha = () => {
+    const maxScroll = Math.max(0, productosDestacados.length - 3);
+    setScrollCarrusel(Math.min(maxScroll, scrollCarrusel + 1));
+  };
+
+  const { subtotal, descuento, total, totalUnidades } = calcularTotal();
 
   return (
-    <div className="tienda-container">
+    <div className="min-h-screen bg-beige">
       {/* Header */}
-      <header className="header">
-        <div className="header-content">
-          <div className="logo">
-            <span className="logo-studio">STUDIO</span>
-            <span className="logo-ayni">AYNI</span>
-          </div>
-          <div className="nav-actions">
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Buscar"
-                className="search-input"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-              <Search className="search-icon" size={16} />
+      <header className="bg-white shadow-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="text-2xl md:text-3xl font-bold">
+                <span className="text-gris-oscuro">STUDIO </span>
+                <span className="text-oliva">AYNI</span>
+              </div>
             </div>
-            <button className="icon-button" onClick={() => setCartOpen(!cartOpen)}>
-              <ShoppingCart size={22} />
-              {cartItems.length > 0 && (
-                <span className="cart-badge">{cartItems.length}</span>
+
+            {/* Buscador */}
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-oliva"
+                />
+              </div>
+            </div>
+
+            {/* Carrito */}
+            <button
+              onClick={() => setMostrarCarrito(true)}
+              className="relative bg-oliva text-white p-3 rounded-full hover:bg-marron transition-colors"
+            >
+              <ShoppingCart size={24} />
+              {carrito.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-terracota text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                  {carrito.reduce((sum, item) => sum + item.cantidad, 0)}
+                </span>
               )}
             </button>
           </div>
@@ -254,463 +187,620 @@ function App() {
       </header>
 
       {/* Hero Section */}
-      <section className="hero">
-        <h1>Diseño Funcional para tu Espacio</h1>
-        <p>Piezas únicas creadas con impresión 3D de precisión</p>
+      <section className="bg-gradient-to-r from-oliva to-marron text-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            Diseño Funcional para tu Espacio
+          </h1>
+          <p className="text-xl md:text-2xl text-beige">
+            Piezas únicas creadas con impresión 3D de precisión
+          </p>
+        </div>
       </section>
 
       {/* Novedades del Mes */}
       {productosDestacados.length > 0 && (
-        <section className="novedades">
-          <div className="novedades-header">
-            <div className="novedades-title">
-              <Sparkles size={24} />
-              <h2>Novedades del Mes</h2>
-            </div>
-            <div className="novedades-nav">
-              <button 
-                className="nav-arrow nav-arrow-left" 
-                onClick={() => scrollNovedades('left')}
-                disabled={novedadesScroll === 0}
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button 
-                className="nav-arrow nav-arrow-right" 
-                onClick={() => scrollNovedades('right')}
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
-          </div>
-          <div className="novedades-carousel">
-            {productosDestacados.map((producto) => (
-              <div 
-                key={producto.id} 
-                className="novedad-card"
-                onClick={() => openProductModal(producto)}
-              >
-                <div className="novedad-badge">NUEVO</div>
-                <img 
-                  src={producto.imagen?.startsWith('http') ? producto.imagen : `http://localhost:3001${producto.imagen}`} 
-                  alt={producto.nombre} 
-                />
-                <div className="novedad-info">
-                  <h3>{producto.nombre}</h3>
-                  <p className="novedad-price">Bs {producto.precio.toFixed(2)}</p>
+        <section className="py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gris-oscuro flex items-center gap-2">
+                ✨ Novedades del Mes
+              </h2>
+              {productosDestacados.length > 3 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={scrollCarruselIzquierda}
+                    disabled={scrollCarrusel === 0}
+                    className="p-2 rounded-full bg-oliva text-white hover:bg-marron transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={scrollCarruselDerecha}
+                    disabled={scrollCarrusel >= productosDestacados.length - 3}
+                    className="p-2 rounded-full bg-oliva text-white hover:bg-marron transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
                 </div>
+              )}
+            </div>
+
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-6 transition-transform duration-500"
+                style={{
+                  transform: `translateX(-${scrollCarrusel * (100 / 3 + 2)}%)`
+                }}
+              >
+                {productosDestacados.map((producto) => (
+                  <div
+                    key={producto.id}
+                    className="min-w-[calc(33.333%-1rem)] bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
+                    onClick={() => abrirDetalleProducto(producto)}
+                  >
+                    <div className="relative">
+                      <img
+                        src={producto.imagen}
+                        alt={producto.nombre}
+                        className="w-full h-64 object-cover"
+                      />
+                      <span className="absolute top-2 right-2 bg-terracota text-white px-3 py-1 rounded-full text-sm font-bold">
+                        ¡Nuevo!
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg mb-2">{producto.nombre}</h3>
+                      <p className="text-gray-600 text-sm mb-3">{producto.descripcion}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-oliva">Bs {producto.precio.toFixed(2)}</span>
+                        <button className="bg-oliva text-white px-4 py-2 rounded-lg hover:bg-marron transition-colors">
+                          Ver más
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </section>
       )}
 
-      {/* Categories */}
-      <section className="categories">
-        <div className="category-grid">
-          {categorias.map(cat => (
-            <button
-              key={cat.id}
-              className={`category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
-              onClick={() => handleCategoryChange(cat.id)}
-            >
-              {cat.nombre}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Products */}
-      <section className="products">
-        <div className="product-grid">
-          {currentProducts.map((producto) => (
-            <div key={producto.id} className="product-card">
-              <img 
-                src={producto.imagen?.startsWith('http') ? producto.imagen : `http://localhost:3001${producto.imagen}`} 
-                alt={producto.nombre} 
-                className="product-image" 
-                onClick={() => openProductModal(producto)}
-              />
-              <div className="product-info">
-                <h3 className="product-name">{producto.nombre}</h3>
-                <p className="product-description">{producto.descripcion}</p>
-                <div className="product-footer">
-                  <span className="product-price">Bs {producto.precio.toFixed(2)}</span>
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={() => openProductModal(producto)}
-                  >
-                    AGREGAR
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            {[...Array(totalPages)].map((_, index) => (
+      {/* Filtros de Categoría */}
+      <section className="py-8 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap gap-3 justify-center">
+            {categorias.map((categoria) => (
               <button
-                key={index + 1}
-                className={`pagination-number ${currentPage === index + 1 ? 'active' : ''}`}
-                onClick={() => paginate(index + 1)}
+                key={categoria}
+                onClick={() => setCategoriaActiva(categoria)}
+                className={`px-6 py-2 rounded-full font-medium transition-all ${
+                  categoriaActiva === categoria
+                    ? 'bg-oliva text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
-                {index + 1}
+                {categoria}
               </button>
             ))}
-
-            <button 
-              className="pagination-btn"
-              onClick={() => paginate(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight size={20} />
-            </button>
           </div>
-        )}
+        </div>
       </section>
 
-      {/* Footer con Redes Sociales */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <div className="footer-logo">
-              <span className="footer-logo-studio">STUDIO</span>
-              <span className="footer-logo-ayni">AYNI</span>
-            </div>
-            <p className="footer-tagline">Diseño funcional con sofisticación natural</p>
-          </div>
-
-          <div className="footer-section">
-            <h3 className="footer-title">Síguenos</h3>
-            <div className="social-links">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                <Instagram size={20} />
-                <span>Instagram</span>
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
-                <Facebook size={20} />
-                <span>Facebook</span>
-              </a>
-            </div>
-          </div>
-
-          <div className="footer-section">
-            <h3 className="footer-title">Contacto</h3>
-            <div className="contact-info">
-              <a href="https://wa.me/59176543210" className="contact-item">
-                <PhoneIcon size={18} />
-                <span>+591 76543210</span>
-              </a>
-              <a href="mailto:contacto@studioayni.com" className="contact-item">
-                <Mail size={18} />
-                <span>contacto@studioayni.com</span>
-              </a>
-              <div className="contact-item">
-                <MapPin size={18} />
-                <span>La Paz, Bolivia</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <p>&copy; 2025 Studio AYNI. Todos los derechos reservados.</p>
-        </div>
-      </footer>
-
-      {/* Modal de Producto CON CANTIDAD */}
-      {selectedProduct && (
-        <div className="product-modal-overlay" onClick={closeProductModal}>
-          <div className="product-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-back" onClick={closeProductModal}>
-              <ArrowLeft size={24} />
-              <span>Volver</span>
-            </button>
-            
-            <button className="modal-close" onClick={closeProductModal}>
-              <X size={24} />
-            </button>
-            
-            <div className="modal-content">
-              <div className="modal-image-container">
-                <div className="modal-image-wrapper">
-                  <img 
-                    src={(selectedColor ? selectedColor.imagen : selectedProduct.imagen)?.startsWith('http') ? 
-                         (selectedColor ? selectedColor.imagen : selectedProduct.imagen) : 
-                         `http://localhost:3001${selectedColor ? selectedColor.imagen : selectedProduct.imagen}`} 
-                    alt={selectedProduct.nombre} 
-                    className="modal-image"
-                  />
-                </div>
-              </div>
-              
-              <div className="modal-info">
-                <h2 className="modal-product-name">{selectedProduct.nombre}</h2>
-                <p className="modal-product-category">
-                  {categorias.find(cat => cat.id === selectedProduct.categoria)?.nombre}
-                </p>
-                
-                {/* Selector de Colores */}
-                {selectedProduct.colores && selectedProduct.colores.length > 0 && (
-                  <div className="color-selector">
-                    <h3>Colores Disponibles</h3>
-                    <div className="color-options">
-                      {selectedProduct.colores.map((color, index) => (
-                        <button
-                          key={index}
-                          className={`color-circle ${selectedColor?.nombre === color.nombre ? 'active' : ''}`}
-                          style={{ backgroundColor: color.hex }}
-                          onClick={() => setSelectedColor(color)}
-                          title={color.nombre}
-                        >
-                          {selectedColor?.nombre === color.nombre && (
-                            <span className="color-check">✓</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="selected-color-name">
-                      Color seleccionado: <strong>{selectedColor?.nombre}</strong>
-                    </p>
-                  </div>
-                )}
-
-                {/* SELECTOR DE CANTIDAD */}
-                <div className="quantity-selector">
-                  <h3>Cantidad</h3>
-                  <div className="quantity-controls-large">
-                    <button onClick={decrementQuantity} className="qty-btn-large">
-                      <Minus size={20} />
-                    </button>
-                    <span className="quantity-display">{quantity}</span>
-                    <button onClick={incrementQuantity} className="qty-btn-large">
-                      <Plus size={20} />
-                    </button>
-                  </div>
-                  {quantity >= 12 && (
-                    <p className="descuento-aviso">🎉 ¡10% de descuento por 12 o más unidades!</p>
-                  )}
-                </div>
-                
-                <div className="modal-product-description">
-                  <h3>Descripción</h3>
-                  <p>{selectedProduct.descripcion}</p>
-                  <p className="description-extra">
-                    Este producto está fabricado con materiales de alta calidad mediante impresión 3D de precisión. 
-                    Diseñado con atención al detalle para ofrecer funcionalidad y estética en tu espacio.
-                  </p>
-                </div>
-                
-                <div className="modal-product-features">
-                  <h3>Características</h3>
-                  <ul>
-                    <li>✓ Impresión 3D de alta calidad</li>
-                    <li>✓ Materiales resistentes y duraderos</li>
-                    <li>✓ Diseño personalizable</li>
-                    <li>✓ Acabado profesional</li>
-                  </ul>
-                </div>
-                
-                {/* PRECIOS */}
-                <div className="modal-pricing">
-                  <div className="price-row">
-                    <span className="price-label">Precio unitario:</span>
-                    <span className="price-value">Bs {getPrecioConDescuento(selectedProduct.precio, quantity).toFixed(2)}</span>
-                  </div>
-                  <div className="price-row total-row">
-                    <span className="price-label">Total ({quantity} {quantity === 1 ? 'unidad' : 'unidades'}):</span>
-                    <span className="price-value-total">Bs {(getPrecioConDescuento(selectedProduct.precio, quantity) * quantity).toFixed(2)}</span>
-                  </div>
-                </div>
-                
-                <div className="modal-footer">
-                  <button 
-                    className="modal-add-to-cart"
-                    onClick={() => addToCart(selectedProduct, selectedColor, quantity)}
-                  >
-                    <ShoppingCart size={20} />
-                    AGREGAR AL CARRITO
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cart Sidebar */}
-      <div className={`cart-sidebar ${cartOpen ? 'open' : ''}`}>
-        <div className="cart-header">
-          <h2 className="cart-title">Carrito</h2>
-          <button className="close-cart" onClick={() => setCartOpen(false)}>
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="cart-items">
-          {cartItems.length === 0 ? (
-            <div className="empty-cart">
-              <ShoppingCart className="empty-cart-icon" size={60} />
-              <p>Tu carrito está vacío</p>
+      {/* Grid de Productos */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          {productosFiltrados.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No se encontraron productos</p>
             </div>
           ) : (
-            cartItems.map((item, index) => (
-              <div key={`${item.id}-${item.colorSeleccionado}-${index}`} className="cart-item">
-                <div className="cart-item-header">
-                  <span className="cart-item-name">
-                    {item.nombre}
-                    {item.colorSeleccionado && (
-                      <span className="cart-item-color"> ({item.colorSeleccionado})</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {productosFiltrados.map((producto) => (
+                <div
+                  key={producto.id}
+                  className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1"
+                  onClick={() => abrirDetalleProducto(producto)}
+                >
+                  <div className="relative">
+                    <img
+                      src={producto.imagen}
+                      alt={producto.nombre}
+                      className="w-full h-64 object-cover"
+                    />
+                    {producto.novedad && (
+                      <span className="absolute top-2 right-2 bg-terracota text-white px-3 py-1 rounded-full text-xs font-bold">
+                        Nuevo
+                      </span>
                     )}
-                  </span>
-                  <button 
-                    className="remove-item"
-                    onClick={() => removeFromCart(item.id, item.colorSeleccionado)}
-                  >
-                    eliminar
-                  </button>
-                </div>
-                <div className="cart-item-details">
-                  <div className="quantity-controls">
-                    <button 
-                      className="qty-btn"
-                      onClick={() => updateQuantity(item.id, item.colorSeleccionado, item.cantidad - 1)}
-                    >
-                      −
-                    </button>
-                    <span>{item.cantidad}</span>
-                    <button 
-                      className="qty-btn"
-                      onClick={() => updateQuantity(item.id, item.colorSeleccionado, item.cantidad + 1)}
-                    >
-                      +
-                    </button>
                   </div>
-                  <span className="cart-item-price">
-                    Bs {(item.precioUnitario * item.cantidad).toFixed(2)}
-                  </span>
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg mb-2">{producto.nombre}</h3>
+                    <p className="text-sm text-gray-600 mb-2 uppercase">{producto.categoria}</p>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{producto.descripcion}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-oliva">Bs {producto.precio.toFixed(2)}</span>
+                      <button className="bg-oliva text-white px-4 py-2 rounded-lg hover:bg-marron transition-colors">
+                        Ver
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                {item.cantidad >= 12 && (
-                  <div className="cart-item-discount">10% descuento aplicado</div>
-                )}
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
+      </section>
 
-        {cartItems.length > 0 && (
-          <div className="cart-footer">
-            <div className="cart-total">
-              <span className="total-label">Total</span>
-              <span className="total-amount">Bs {total.toFixed(2)}</span>
-            </div>
-            <button className="checkout-btn" onClick={() => setCheckoutOpen(true)}>
-              REALIZAR PEDIDO
-            </button>
-            <button className="checkout-btn-whatsapp" onClick={enviarPedidoWhatsApp}>
-              ENVIAR POR WHATSAPP
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* CHECKOUT MODAL */}
-      {checkoutOpen && (
-        <div className="checkout-overlay" onClick={() => setCheckoutOpen(false)}>
-          <div className="checkout-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="checkout-header">
-              <h2>Completar Pedido</h2>
-              <button onClick={() => setCheckoutOpen(false)} className="close-checkout">
+      {/* Modal de Detalle de Producto */}
+      {productoSeleccionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">{productoSeleccionado.nombre}</h2>
+              <button
+                onClick={cerrarDetalleProducto}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleCheckoutSubmit} className="checkout-form">
-              <div className="form-section">
-                <h3>Información de Contacto</h3>
-                <input
-                  type="text"
-                  placeholder="Nombre completo *"
-                  value={checkoutData.nombre}
-                  onChange={(e) => setCheckoutData({...checkoutData, nombre: e.target.value})}
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Teléfono/WhatsApp *"
-                  value={checkoutData.telefono}
-                  onChange={(e) => setCheckoutData({...checkoutData, telefono: e.target.value})}
-                  required
-                />
-              </div>
+            <div className="p-6">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Imagen */}
+                <div>
+                  <img
+                    src={colorSeleccionado?.imagen || productoSeleccionado.imagen}
+                    alt={productoSeleccionado.nombre}
+                    className="w-full rounded-lg shadow-lg"
+                  />
+                </div>
 
-              <div className="form-section">
-                <h3>Dirección de Entrega</h3>
-                <input
-                  type="text"
-                  placeholder="Ciudad *"
-                  value={checkoutData.ciudad}
-                  onChange={(e) => setCheckoutData({...checkoutData, ciudad: e.target.value})}
-                  required
-                />
-                <textarea
-                  placeholder="Dirección completa *"
-                  value={checkoutData.direccion}
-                  onChange={(e) => setCheckoutData({...checkoutData, direccion: e.target.value})}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Referencia (ej: cerca al parque)"
-                  value={checkoutData.referencia}
-                  onChange={(e) => setCheckoutData({...checkoutData, referencia: e.target.value})}
-                />
-              </div>
+                {/* Detalles */}
+                <div>
+                  <span className="inline-block bg-oliva text-white px-3 py-1 rounded-full text-sm font-medium mb-4 uppercase">
+                    {productoSeleccionado.categoria}
+                  </span>
 
-              <div className="form-section">
-                <h3>Método de Pago</h3>
-                <select
-                  value={checkoutData.metodoPago}
-                  onChange={(e) => setCheckoutData({...checkoutData, metodoPago: e.target.value})}
-                >
-                  <option value="efectivo">Efectivo contra entrega</option>
-                  <option value="transferencia">Transferencia bancaria</option>
-                  <option value="qr">QR</option>
-                </select>
-              </div>
+                  {/* Colores */}
+                  {productoSeleccionado.colores && productoSeleccionado.colores.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="font-bold mb-3">Colores Disponibles</h3>
+                      <div className="flex gap-3">
+                        {productoSeleccionado.colores.map((color, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setColorSeleccionado(color)}
+                            className={`w-12 h-12 rounded-full border-4 transition-all ${
+                              colorSeleccionado?.nombre === color.nombre
+                                ? 'border-oliva scale-110'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                            style={{ backgroundColor: color.hex }}
+                            title={color.nombre}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Color seleccionado: <span className="font-medium">{colorSeleccionado?.nombre}</span>
+                      </p>
+                    </div>
+                  )}
 
-              <div className="checkout-summary">
-                <h3>Resumen del Pedido</h3>
-                {cartItems.map((item, index) => (
-                  <div key={index} className="summary-item">
-                    <span>{item.cantidad}x {item.nombre}</span>
-                    <span>Bs {(item.precioUnitario * item.cantidad).toFixed(2)}</span>
+                  {/* Cantidad */}
+                  <div className="mb-6">
+                    <h3 className="font-bold mb-3">Cantidad</h3>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById('cantidad-input');
+                          input.value = Math.max(1, parseInt(input.value) - 1);
+                        }}
+                        className="bg-gray-200 hover:bg-gray-300 p-2 rounded-full transition-colors"
+                      >
+                        <Minus size={20} />
+                      </button>
+                      <input
+                        id="cantidad-input"
+                        type="number"
+                        defaultValue="1"
+                        min="1"
+                        className="w-20 text-center border-2 border-gray-300 rounded-lg py-2 font-bold text-lg"
+                      />
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById('cantidad-input');
+                          input.value = parseInt(input.value) + 1;
+                        }}
+                        className="bg-gray-200 hover:bg-gray-300 p-2 rounded-full transition-colors"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
                   </div>
-                ))}
-                <div className="summary-total">
-                  <strong>Total:</strong>
-                  <strong>Bs {total.toFixed(2)}</strong>
+
+                  {/* Descripción */}
+                  <div className="mb-6">
+                    <h3 className="font-bold mb-2">Descripción</h3>
+                    <p className="text-gray-600">{productoSeleccionado.descripcion}</p>
+                    <p className="text-gray-500 text-sm mt-3 italic">
+                      Este producto está fabricado con materiales de alta calidad mediante impresión 3D de precisión. 
+                      Diseñado con atención al detalle para ofrecer funcionalidad y estética en tu espacio.
+                    </p>
+                  </div>
+
+                  {/* Características */}
+                  <div className="mb-6">
+                    <h3 className="font-bold mb-2">Características</h3>
+                    <ul className="list-disc list-inside text-gray-600 space-y-1">
+                      <li>Impresión 3D de alta calidad</li>
+                      <li>Material resistente y duradero</li>
+                      <li>Diseño funcional y estético</li>
+                      <li>Acabado profesional</li>
+                    </ul>
+                  </div>
+
+                  {/* Precio y Botón */}
+                  <div className="border-t pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-3xl font-bold text-oliva">Bs {productoSeleccionado.precio.toFixed(2)}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const cantidad = parseInt(document.getElementById('cantidad-input').value);
+                        agregarAlCarrito(productoSeleccionado, cantidad);
+                      }}
+                      className="w-full bg-oliva text-white py-3 rounded-lg font-bold hover:bg-marron transition-colors"
+                    >
+                      AGREGAR AL CARRITO
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <button type="submit" className="submit-order-btn">
-                CONFIRMAR PEDIDO
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Modal de Carrito */}
+      {mostrarCarrito && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white w-full md:max-w-2xl md:rounded-lg max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Tu Carrito</h2>
+              <button
+                onClick={() => setMostrarCarrito(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-4">
+              {carrito.length === 0 ? (
+                <div className="text-center py-12">
+                  <ShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500 text-lg">Tu carrito está vacío</p>
+                </div>
+              ) : (
+                <>
+                  {/* Items del carrito */}
+                  <div className="space-y-4 mb-6">
+                    {carrito.map((item) => (
+                      <div key={`${item.id}-${item.color}`} className="flex gap-4 border-b pb-4">
+                        <img
+                          src={item.imagen}
+                          alt={item.nombre}
+                          className="w-20 h-20 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-bold">{item.nombre}</h3>
+                          <p className="text-sm text-gray-600">Color: {item.color}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => actualizarCantidad(item.id, item.color, item.cantidad - 1)}
+                              className="bg-gray-200 hover:bg-gray-300 p-1 rounded transition-colors"
+                            >
+                              <Minus size={16} />
+                            </button>
+                            <span className="font-bold w-8 text-center">{item.cantidad}</span>
+                            <button
+                              onClick={() => actualizarCantidad(item.id, item.color, item.cantidad + 1)}
+                              className="bg-gray-200 hover:bg-gray-300 p-1 rounded transition-colors"
+                            >
+                              <Plus size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-oliva">Bs {(item.precio * item.cantidad).toFixed(2)}</p>
+                          <button
+                            onClick={() => eliminarDelCarrito(item.id, item.color)}
+                            className="text-red-500 text-sm hover:underline mt-2"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Resumen */}
+                  <div className="border-t pt-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal ({totalUnidades} items):</span>
+                      <span className="font-bold">Bs {subtotal.toFixed(2)}</span>
+                    </div>
+                    {descuento > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Descuento (10% en 12+):</span>
+                        <span className="font-bold">-Bs {descuento.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xl font-bold border-t pt-2">
+                      <span>Total:</span>
+                      <span className="text-oliva">Bs {total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Botón de Checkout */}
+                  <button
+                    onClick={() => {
+                      setMostrarCarrito(false);
+                      setMostrarCheckout(true);
+                    }}
+                    className="w-full bg-oliva text-white py-3 rounded-lg font-bold hover:bg-marron transition-colors mt-6"
+                  >
+                    FINALIZAR COMPRA
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Checkout */}
+      {mostrarCheckout && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Finalizar Compra</h2>
+              <button
+                onClick={() => setMostrarCheckout(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Resumen del pedido */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-bold mb-3">Resumen del Pedido</h3>
+                {carrito.map((item) => (
+                  <div key={`${item.id}-${item.color}`} className="flex justify-between text-sm mb-2">
+                    <span>{item.nombre} ({item.color}) x{item.cantidad}</span>
+                    <span className="font-bold">Bs {(item.precio * item.cantidad).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t mt-3 pt-3">
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span className="text-oliva">Bs {total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opciones de compra */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg mb-4">Elige cómo deseas continuar:</h3>
+
+                {/* Opción 1: Reserva Online */}
+                <div className="border-2 border-oliva rounded-lg p-4">
+                  <h4 className="font-bold mb-2">📝 Reserva Online</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Completa tus datos y reserva tu pedido. Te contactaremos para confirmar.
+                  </p>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.target);
+                      const pedido = {
+                        cliente: {
+                          nombre: formData.get('nombre'),
+                          email: formData.get('email'),
+                          telefono: formData.get('telefono')
+                        },
+                        productos: carrito,
+                        total,
+                        metodoPago: 'reserva'
+                      };
+
+                      try {
+                        const response = await fetch(`${API_URL}/pedidos`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(pedido)
+                        });
+
+                        if (response.ok) {
+                          alert('¡Pedido reservado! Te contactaremos pronto.');
+                          setCarrito([]);
+                          setMostrarCheckout(false);
+                        }
+                      } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error al procesar el pedido');
+                      }
+                    }}
+                  >
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        name="nombre"
+                        placeholder="Nombre completo"
+                        required
+                        className="w-full p-2 border rounded-lg"
+                      />
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="Email"
+                        required
+                        className="w-full p-2 border rounded-lg"
+                      />
+                      <input
+                        type="tel"
+                        name="telefono"
+                        placeholder="Teléfono"
+                        required
+                        className="w-full p-2 border rounded-lg"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-oliva text-white py-2 rounded-lg font-bold hover:bg-marron transition-colors"
+                      >
+                        RESERVAR PEDIDO
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Opción 2: WhatsApp */}
+                <div className="border-2 border-green-500 rounded-lg p-4">
+                  <h4 className="font-bold mb-2 flex items-center gap-2">
+                    <MessageCircle size={20} className="text-green-500" />
+                    Pedir por WhatsApp
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Envía tu pedido directamente por WhatsApp y coordina los detalles.
+                  </p>
+                  <button
+                    onClick={() => {
+                      const mensaje = `¡Hola! Quiero hacer un pedido:\n\n${carrito.map(item =>
+                        `${item.nombre} (${item.color}) x${item.cantidad} - Bs ${(item.precio * item.cantidad).toFixed(2)}`
+                      ).join('\n')}\n\nTotal: Bs ${total.toFixed(2)}${descuento > 0 ? ` (incluye descuento de Bs ${descuento.toFixed(2)})` : ''}`;
+
+                      window.open(`https://wa.me/message/WA4J7PMW6D4KP1?text=${encodeURIComponent(mensaje)}`);
+                    }}
+                    className="w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle size={20} />
+                    ABRIR WHATSAPP
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Botón flotante de WhatsApp */}
+      <a
+        href="https://wa.me/message/WA4J7PMW6D4KP1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 z-50"
+        title="Contáctanos por WhatsApp"
+      >
+        <MessageCircle size={28} />
+      </a>
+
+      {/* Footer */}
+      <footer className="bg-gris-oscuro text-white py-12 mt-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            
+            {/* Columna 1 - Información */}
+            <div>
+              <h3 className="text-xl font-bold mb-4 text-terracota">STUDIO AYNI</h3>
+              <p className="text-gray-300 mb-4">
+                Natural Sophistication
+              </p>
+              <p className="text-gray-400 text-sm">
+                Diseño funcional para tu espacio mediante impresión 3D de precisión
+              </p>
+            </div>
+            
+            {/* Columna 2 - Enlaces Rápidos */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Enlaces</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#productos" className="text-gray-300 hover:text-terracota transition-colors">
+                    Productos
+                  </a>
+                </li>
+                <li>
+                  <a href="#novedades" className="text-gray-300 hover:text-terracota transition-colors">
+                    Novedades
+                  </a>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Columna 3 - Redes Sociales */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Síguenos</h3>
+              <div className="flex gap-4">
+                <a 
+                  href="https://www.instagram.com/studio.ayni3d?igsh=MTZzazV6NWJsZWR2NQ==" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-white/10 p-3 rounded-full hover:bg-terracota transition-all duration-300"
+                  title="Instagram"
+                >
+                  <Instagram size={24} />
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/1Bf9QJhgJe/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-white/10 p-3 rounded-full hover:bg-terracota transition-all duration-300"
+                  title="Facebook"
+                >
+                  <Facebook size={24} />
+                </a>
+                <a 
+                  href="https://wa.me/message/WA4J7PMW6D4KP1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-white/10 p-3 rounded-full hover:bg-terracota transition-all duration-300"
+                  title="WhatsApp"
+                >
+                  <MessageCircle size={24} />
+                </a>
+              </div>
+            </div>
+            
+            {/* Columna 4 - Contacto */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">Contacto</h3>
+              <div className="space-y-3 text-gray-300">
+                <a 
+                  href="https://wa.me/message/WA4J7PMW6D4KP1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-terracota transition-colors"
+                >
+                  <MessageCircle size={18} />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            </div>
+            
+          </div>
+          
+          {/* Copyright */}
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} Studio AYNI. Todos los derechos reservados.</p>
+            <p className="mt-2 text-sm">Natural Sophistication</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
