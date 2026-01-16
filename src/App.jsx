@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles } from 'lucide-react';
+import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles, MessageCircle } from 'lucide-react';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
@@ -219,7 +219,7 @@ function App() {
       return `${item.cantidad}x ${item.nombre}${colorInfo}${descuento} - Bs ${(item.precioUnitario * item.cantidad).toFixed(2)}`;
     }).join('\n');
     const mensajeTotal = `*PEDIDO STUDIO AYNI*\n\n${mensaje}\n\n*Total: Bs ${total.toFixed(2)}*`;
-    const url = `https://wa.me/59176543210?text=${encodeURIComponent(mensajeTotal)}`;
+    const url = `https://wa.me/message/WA4J7PMW6D4KP1?text=${encodeURIComponent(mensajeTotal)}`;
     window.open(url, '_blank');
   };
 
@@ -380,7 +380,7 @@ function App() {
         )}
       </section>
 
-      {/* Footer con Redes Sociales */}
+      {/* Footer con Redes Sociales ACTUALIZADAS */}
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
@@ -388,19 +388,24 @@ function App() {
               <span className="footer-logo-studio">STUDIO</span>
               <span className="footer-logo-ayni">AYNI</span>
             </div>
-            <p className="footer-tagline">Diseño funcional con sofisticación natural</p>
+            <p className="footer-tagline">Natural Sophistication</p>
+            <p className="footer-description">Diseño funcional para tu espacio mediante impresión 3D de precisión</p>
           </div>
 
           <div className="footer-section">
             <h3 className="footer-title">Síguenos</h3>
             <div className="social-links">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-link">
+              <a href="https://www.instagram.com/studio.ayni3d?igsh=MTZzazV6NWJsZWR2NQ==" target="_blank" rel="noopener noreferrer" className="social-link">
                 <Instagram size={20} />
                 <span>Instagram</span>
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-link">
+              <a href="https://www.facebook.com/share/1Bf9QJhgJe/" target="_blank" rel="noopener noreferrer" className="social-link">
                 <Facebook size={20} />
                 <span>Facebook</span>
+              </a>
+              <a href="https://wa.me/message/WA4J7PMW6D4KP1" target="_blank" rel="noopener noreferrer" className="social-link">
+                <MessageCircle size={20} />
+                <span>WhatsApp</span>
               </a>
             </div>
           </div>
@@ -408,13 +413,9 @@ function App() {
           <div className="footer-section">
             <h3 className="footer-title">Contacto</h3>
             <div className="contact-info">
-              <a href="https://wa.me/59176543210" className="contact-item">
-                <PhoneIcon size={18} />
-                <span>+591 76543210</span>
-              </a>
-              <a href="mailto:contacto@studioayni.com" className="contact-item">
-                <Mail size={18} />
-                <span>contacto@studioayni.com</span>
+              <a href="https://wa.me/message/WA4J7PMW6D4KP1" className="contact-item" target="_blank" rel="noopener noreferrer">
+                <MessageCircle size={18} />
+                <span>WhatsApp</span>
               </a>
               <div className="contact-item">
                 <MapPin size={18} />
@@ -425,9 +426,21 @@ function App() {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; 2025 Studio AYNI. Todos los derechos reservados.</p>
+          <p>&copy; 2026 Studio AYNI. Todos los derechos reservados.</p>
+          <p className="footer-tagline-bottom">Natural Sophistication</p>
         </div>
       </footer>
+
+      {/* Botón flotante de WhatsApp */}
+      <a
+        href="https://wa.me/message/WA4J7PMW6D4KP1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="whatsapp-float"
+        title="Contáctanos por WhatsApp"
+      >
+        <MessageCircle size={28} />
+      </a>
 
       {/* Modal de Producto CON CANTIDAD */}
       {selectedProduct && (
