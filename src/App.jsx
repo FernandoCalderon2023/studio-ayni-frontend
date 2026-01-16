@@ -213,12 +213,18 @@ function App() {
   };
 
   const enviarPedidoWhatsApp = () => {
-    const mensaje = cartItems.map(item => {
-      const colorInfo = item.colorSeleccionado ? ` (${item.colorSeleccionado})` : '';
-      const descuento = item.cantidad >= 12 ? ' [10% DESC]' : '';
-      return `${item.cantidad}x ${item.nombre}${colorInfo}${descuento} - Bs ${(item.precioUnitario * item.cantidad).toFixed(2)}`;
-    }).join('\n');
-    const mensajeTotal = `*PEDIDO STUDIO AYNI*\n\n${mensaje}\n\n*Total: Bs ${total.toFixed(2)}*`;
+    const mensaje = cartItems.map((item, index) => {
+      const colorInfo = item.colorSeleccionado ? ` (Color: ${item.colorSeleccionado})` : '';
+      const precioUnitario = item.precioUnitario.toFixed(2);
+      const subtotal = (item.precioUnitario * item.cantidad).toFixed(2);
+      const descuentoInfo = item.cantidad >= 12 ? ' ✨ _10% descuento aplicado_' : '';
+      
+      return `*${index + 1}.* ${item.nombre}${colorInfo}\n   • Cantidad: ${item.cantidad} unidad${item.cantidad > 1 ? 'es' : ''}\n   • Precio unitario: Bs ${precioUnitario}\n   • Subtotal: Bs ${subtotal}${descuentoInfo}`;
+    }).join('\n\n');
+    
+    const totalUnidades = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
+    const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
+    
     const url = `https://wa.me/message/WA4J7PMW6D4KP1?text=${encodeURIComponent(mensajeTotal)}`;
     window.open(url, '_blank');
   };
@@ -433,7 +439,7 @@ function App() {
 
       {/* Botón flotante de WhatsApp */}
       <a
-        href="https://wa.me/message/WA4J7PMW6D4KP1"
+        href={`https://wa.me/message/WA4J7PMW6D4KP1?text=${encodeURIComponent('¡Hola! Me podría brindar más información sobre los productos')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="whatsapp-float"
