@@ -225,8 +225,19 @@ function App() {
     const totalUnidades = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
     const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
     
-    const url = `https://wa.me/message/WA4J7PMW6D4KP1?text=${encodeURIComponent(mensajeTotal)}`;
-    window.open(url, '_blank');
+    // Número de WhatsApp de Studio AYNI
+    const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número (código país + número)
+    
+    // Detectar si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Construir URL según dispositivo
+    const url = isMobile 
+      ? `whatsapp://send?phone=${numeroWhatsApp}&text=${encodeURIComponent(mensajeTotal)}`
+      : `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeTotal)}`;
+    
+    // Abrir WhatsApp
+    window.location.href = url;
   };
 
   return (
@@ -465,9 +476,9 @@ function App() {
               <div className="modal-image-container">
                 <div className="modal-image-wrapper">
                   <img 
-                    src={(selectedColor ? selectedColor.imagen : selectedProduct.imagen)?.startsWith('http') ? 
-                         (selectedColor ? selectedColor.imagen : selectedProduct.imagen) : 
-                         `http://localhost:3001${selectedColor ? selectedColor.imagen : selectedProduct.imagen}`} 
+                    src={selectedProduct.imagen?.startsWith('http') ? 
+                         selectedProduct.imagen : 
+                         `http://localhost:3001${selectedProduct.imagen}`} 
                     alt={selectedProduct.nombre} 
                     className="modal-image"
                   />
