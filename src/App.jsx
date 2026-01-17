@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles, MessageCircle } from 'lucide-react';
 import './App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni.vercel.app/api';
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
