@@ -11,8 +11,7 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [selectedColors, setSelectedColors] = useState({}); // Objeto: {colorName: cantidad}
   const [novedadesScroll, setNovedadesScroll] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState({
@@ -69,23 +68,45 @@ function App() {
     }
   };
 
-  // Abrir modal y setear primer color por defecto
+  // Abrir modal y resetear selección de colores
   const openProductModal = (producto) => {
     setSelectedProduct(producto);
-    setSelectedColor(producto.colores ? producto.colores[0] : null);
-    setQuantity(1);
+    // Inicializar objeto de colores seleccionados vacío
+    setSelectedColors({});
   };
 
   // Cerrar modal y resetear
   const closeProductModal = () => {
     setSelectedProduct(null);
-    setSelectedColor(null);
-    setQuantity(1);
+    setSelectedColors({});
   };
 
-  // Cambiar cantidad
-  const incrementQuantity = () => setQuantity(prev => prev + 1);
-  const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
+  // Toggle selección de color
+  const toggleColor = (colorNombre) => {
+    setSelectedColors(prev => {
+      const newColors = { ...prev };
+      if (newColors[colorNombre]) {
+        delete newColors[colorNombre];
+      } else {
+        newColors[colorNombre] = 1; // Cantidad inicial: 1
+      }
+      return newColors;
+    });
+  };
+
+  // Cambiar cantidad de un color específico
+  const updateColorQuantity = (colorNombre, delta) => {
+    setSelectedColors(prev => {
+      const newColors = { ...prev };
+      const newQuantity = (newColors[colorNombre] || 0) + delta;
+      if (newQuantity <= 0) {
+        delete newColors[colorNombre];
+      } else {
+        newColors[colorNombre] = newQuantity;
+      }
+      return newColors;
+    });
+  };
 
   // Precio con descuento por cantidad
   const getPrecioConDescuento = (precioBase, cant) => {
@@ -126,29 +147,58 @@ function App() {
     setCurrentPage(1);
   };
 
-  const addToCart = (producto, colorSeleccionado, cantidad) => {
-    const precioFinal = getPrecioConDescuento(producto.precio, cantidad);
-    const productoConDetalles = {
-      ...producto,
-      colorSeleccionado: colorSeleccionado ? colorSeleccionado.nombre : null,
-      precioUnitario: precioFinal,
-      cantidad: cantidad
-    };
-    
-    const existing = cartItems.find(item => 
-      item.id === producto.id && 
-      item.colorSeleccionado === productoConDetalles.colorSeleccionado
-    );
-    
-    if (existing) {
-      setCartItems(cartItems.map(item =>
-        item.id === producto.id && item.colorSeleccionado === productoConDetalles.colorSeleccionado
-          ? { ...item, cantidad: item.cantidad + cantidad, precioUnitario: getPrecioConDescuento(producto.precio, item.cantidad + cantidad) }
-          : item
-      ));
-    } else {
-      setCartItems([...cartItems, productoConDetalles]);
+  const addToCart = (producto, coloresSeleccionados) => {
+    // Si no hay colores configurados, agregar producto sin color
+    if (!producto.colores || producto.colores.length === 0) {
+      const cantidad = Object.values(coloresSeleccionados)[0] || 1;
+      const precioFinal = getPrecioConDescuento(producto.precio, cantidad);
+      const productoSinColor = {
+        ...producto,
+        colorSeleccionado: null,
+        precioUnitario: precioFinal,
+        cantidad: cantidad
+      };
+      
+      const existing = cartItems.find(item => item.id === producto.id && !item.colorSeleccionado);
+      
+      if (existing) {
+        setCartItems(cartItems.map(item =>
+          item.id === producto.id && !item.colorSeleccionado
+            ? { ...item, cantidad: item.cantidad + cantidad, precioUnitario: getPrecioConDescuento(producto.precio, item.cantidad + cantidad) }
+            : item
+        ));
+      } else {
+        setCartItems([...cartItems, productoSinColor]);
+      }
+      closeProductModal();
+      return;
     }
+
+    // Si tiene colores, agregar cada color seleccionado por separado
+    Object.entries(coloresSeleccionados).forEach(([colorNombre, cantidad]) => {
+      const precioFinal = getPrecioConDescuento(producto.precio, cantidad);
+      const productoConColor = {
+        ...producto,
+        colorSeleccionado: colorNombre,
+        precioUnitario: precioFinal,
+        cantidad: cantidad
+      };
+      
+      const existing = cartItems.find(item => 
+        item.id === producto.id && 
+        item.colorSeleccionado === colorNombre
+      );
+      
+      if (existing) {
+        setCartItems(cartItems.map(item =>
+          item.id === producto.id && item.colorSeleccionado === colorNombre
+            ? { ...item, cantidad: item.cantidad + cantidad, precioUnitario: getPrecioConDescuento(producto.precio, item.cantidad + cantidad) }
+            : item
+        ));
+      } else {
+        setCartItems([...cartItems, productoConColor]);
+      }
+    });
     
     closeProductModal();
   };
@@ -226,7 +276,7 @@ function App() {
     const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
     
     // Número de WhatsApp de Studio AYNI
-    const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número (código país + número)
+    const numeroWhatsApp = '59176543210'; // CAMBIA ESTO por tu número (código país + número)
     
     // Detectar si es móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -491,47 +541,83 @@ function App() {
                   {categorias.find(cat => cat.id === selectedProduct.categoria)?.nombre}
                 </p>
                 
-                {/* Selector de Colores */}
-                {selectedProduct.colores && selectedProduct.colores.length > 0 && (
-                  <div className="color-selector">
-                    <h3>Colores Disponibles</h3>
-                    <div className="color-options">
+                {/* Selector Múltiple de Colores */}
+                {selectedProduct.colores && selectedProduct.colores.length > 0 ? (
+                  <div className="color-selector-multiple">
+                    <h3>Selecciona colores y cantidades:</h3>
+                    <div className="color-list">
                       {selectedProduct.colores.map((color, index) => (
-                        <button
-                          key={index}
-                          className={`color-circle ${selectedColor?.nombre === color.nombre ? 'active' : ''}`}
-                          style={{ backgroundColor: color.hex }}
-                          onClick={() => setSelectedColor(color)}
-                          title={color.nombre}
-                        >
-                          {selectedColor?.nombre === color.nombre && (
-                            <span className="color-check">✓</span>
+                        <div key={index} className="color-item">
+                          <div className="color-item-header">
+                            <label className="color-checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={!!selectedColors[color.nombre]}
+                                onChange={() => toggleColor(color.nombre)}
+                                className="color-checkbox"
+                              />
+                              <span 
+                                className="color-circle-small" 
+                                style={{ backgroundColor: color.hex }}
+                              />
+                              <span className="color-name">{color.nombre}</span>
+                            </label>
+                          </div>
+                          {selectedColors[color.nombre] && (
+                            <div className="color-quantity">
+                              <button 
+                                onClick={() => updateColorQuantity(color.nombre, -1)}
+                                className="qty-btn-small"
+                              >
+                                <Minus size={16} />
+                              </button>
+                              <span className="qty-display-small">{selectedColors[color.nombre]}</span>
+                              <button 
+                                onClick={() => updateColorQuantity(color.nombre, 1)}
+                                className="qty-btn-small"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
                           )}
-                        </button>
+                        </div>
                       ))}
                     </div>
-                    <p className="selected-color-name">
-                      Color seleccionado: <strong>{selectedColor?.nombre}</strong>
-                    </p>
+                    
+                    {Object.keys(selectedColors).length > 0 && (
+                      <div className="color-summary">
+                        <p>
+                          <strong>Total:</strong> {Object.values(selectedColors).reduce((sum, qty) => sum + qty, 0)} unidad(es)
+                        </p>
+                        {Object.values(selectedColors).reduce((sum, qty) => sum + qty, 0) >= 12 && (
+                          <p className="descuento-aviso">🎉 ¡10% de descuento aplicado!</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="quantity-selector">
+                    <h3>Cantidad</h3>
+                    <div className="quantity-controls-large">
+                      <button 
+                        onClick={() => setSelectedColors({default: Math.max(1, (selectedColors.default || 1) - 1)})}
+                        className="qty-btn-large"
+                      >
+                        <Minus size={20} />
+                      </button>
+                      <span className="quantity-display">{selectedColors.default || 1}</span>
+                      <button 
+                        onClick={() => setSelectedColors({default: (selectedColors.default || 1) + 1})}
+                        className="qty-btn-large"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
+                    {(selectedColors.default || 1) >= 12 && (
+                      <p className="descuento-aviso">🎉 ¡10% de descuento por 12 o más unidades!</p>
+                    )}
                   </div>
                 )}
-
-                {/* SELECTOR DE CANTIDAD */}
-                <div className="quantity-selector">
-                  <h3>Cantidad</h3>
-                  <div className="quantity-controls-large">
-                    <button onClick={decrementQuantity} className="qty-btn-large">
-                      <Minus size={20} />
-                    </button>
-                    <span className="quantity-display">{quantity}</span>
-                    <button onClick={incrementQuantity} className="qty-btn-large">
-                      <Plus size={20} />
-                    </button>
-                  </div>
-                  {quantity >= 12 && (
-                    <p className="descuento-aviso">🎉 ¡10% de descuento por 12 o más unidades!</p>
-                  )}
-                </div>
                 
                 <div className="modal-product-description">
                   <h3>Descripción</h3>
@@ -554,23 +640,37 @@ function App() {
                 
                 {/* PRECIOS */}
                 <div className="modal-pricing">
-                  <div className="price-row">
-                    <span className="price-label">Precio unitario:</span>
-                    <span className="price-value">Bs {getPrecioConDescuento(selectedProduct.precio, quantity).toFixed(2)}</span>
-                  </div>
-                  <div className="price-row total-row">
-                    <span className="price-label">Total ({quantity} {quantity === 1 ? 'unidad' : 'unidades'}):</span>
-                    <span className="price-value-total">Bs {(getPrecioConDescuento(selectedProduct.precio, quantity) * quantity).toFixed(2)}</span>
-                  </div>
+                  {(() => {
+                    const totalUnidades = Object.values(selectedColors).reduce((sum, qty) => sum + qty, 0) || 1;
+                    const precioUnitario = getPrecioConDescuento(selectedProduct.precio, totalUnidades);
+                    const precioTotal = precioUnitario * totalUnidades;
+                    
+                    return (
+                      <>
+                        <div className="price-row">
+                          <span className="price-label">Precio unitario:</span>
+                          <span className="price-value">Bs {precioUnitario.toFixed(2)}</span>
+                        </div>
+                        <div className="price-row total-row">
+                          <span className="price-label">Total ({totalUnidades} {totalUnidades === 1 ? 'unidad' : 'unidades'}):</span>
+                          <span className="price-value-total">Bs {precioTotal.toFixed(2)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
                 
                 <div className="modal-footer">
                   <button 
                     className="modal-add-to-cart"
-                    onClick={() => addToCart(selectedProduct, selectedColor, quantity)}
+                    onClick={() => addToCart(selectedProduct, selectedColors)}
+                    disabled={Object.keys(selectedColors).length === 0}
                   >
                     <ShoppingCart size={20} />
-                    AGREGAR AL CARRITO
+                    {Object.keys(selectedColors).length === 0 
+                      ? 'SELECCIONA AL MENOS UN COLOR' 
+                      : `AGREGAR AL CARRITO (${Object.keys(selectedColors).length} color${Object.keys(selectedColors).length > 1 ? 'es' : ''})`
+                    }
                   </button>
                 </div>
               </div>
