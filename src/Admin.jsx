@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Upload, Trash2, LogOut } from 'lucide-react';
 import './Admin.css';
 
-const API_URL = 'https://studio-ayni-backend.onrender.com/api';
+const API_URL = 'https://studio-ayni.vercel.app/admin';
 
 function Admin() {
   const [token, setToken] = useState(localStorage.getItem('token'));
