@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { X, Upload, Trash2, LogOut } from 'lucide-react';
 import './Admin.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
+const API_URL = 'https://studio-ayni-backend.onrender.com/api';
+
 function Admin() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [productos, setProductos] = useState([]);
   const [error, setError] = useState('');
@@ -53,7 +54,7 @@ function Admin() {
       const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ username, password })
       });
 
       const data = await response.json();
@@ -65,7 +66,7 @@ function Admin() {
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setSuccess('✅ Login exitoso!');
-      setEmail('');
+      setUsername('');
       setPassword('');
     } catch (err) {
       setError('❌ ' + err.message);
@@ -220,10 +221,10 @@ function Admin() {
           
           <form onSubmit={handleLogin}>
             <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Usuario o Email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
             />
@@ -393,7 +394,7 @@ function Admin() {
               productos.map((producto) => (
                 <div key={producto.id} className="product-item">
                   <img 
-                    src={`http://localhost:3001${producto.imagen}`} 
+                    src={producto.imagen?.startsWith('http') ? producto.imagen : `https://studio-ayni-backend.onrender.com${producto.imagen}`} 
                     alt={producto.nombre} 
                   />
                   <div className="product-details">
