@@ -16,10 +16,7 @@ function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutData, setCheckoutData] = useState({
     nombre: '',
-    telefono: '',
-    direccion: '',
-    ciudad: '',
-    referencia: '',
+    whatsapp: '',
     metodoPago: 'efectivo'
   });
   const productsPerPage = 12;
@@ -225,41 +222,25 @@ function App() {
 
   const total = cartItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
 
-  // Sistema de checkout
-  const handleCheckoutSubmit = async (e) => {
+  // Sistema de checkout simplificado
+  const handleCheckoutSubmit = (e) => {
     e.preventDefault();
     
-    const pedido = {
-      cliente: checkoutData,
-      productos: cartItems,
-      total: total,
-      fecha: new Date().toISOString()
-    };
-
-    // Enviar pedido al backend
-    try {
-      const response = await fetch(`${API_URL}/pedidos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pedido)
-      });
-
-      if (response.ok) {
-        alert('¡Pedido realizado con éxito! Te contactaremos pronto.');
-        setCartItems([]);
-        setCheckoutOpen(false);
-        setCheckoutData({
-          nombre: '',
-          telefono: '',
-          direccion: '',
-          ciudad: '',
-          referencia: '',
-          metodoPago: 'efectivo'
-        });
-      }
-    } catch (error) {
-      console.error('Error al realizar pedido:', error);
-    }
+    // Mostrar mensaje de confirmación
+    alert('✅ ¡Pedido registrado!\n\nEn breve lo contactaremos por WhatsApp para confirmar los detalles de su pedido.\n\n¡Gracias por su compra!');
+    
+    // Limpiar carrito
+    setCartItems([]);
+    
+    // Cerrar modal de checkout
+    setCheckoutOpen(false);
+    
+    // Resetear formulario
+    setCheckoutData({
+      nombre: '',
+      whatsapp: '',
+      metodoPago: 'efectivo'
+    });
   };
 
   const enviarPedidoWhatsApp = () => {
@@ -778,33 +759,10 @@ function App() {
                 />
                 <input
                   type="tel"
-                  placeholder="Teléfono/WhatsApp *"
-                  value={checkoutData.telefono}
-                  onChange={(e) => setCheckoutData({...checkoutData, telefono: e.target.value})}
+                  placeholder="WhatsApp *"
+                  value={checkoutData.whatsapp}
+                  onChange={(e) => setCheckoutData({...checkoutData, whatsapp: e.target.value})}
                   required
-                />
-              </div>
-
-              <div className="form-section">
-                <h3>Dirección de Entrega</h3>
-                <input
-                  type="text"
-                  placeholder="Ciudad *"
-                  value={checkoutData.ciudad}
-                  onChange={(e) => setCheckoutData({...checkoutData, ciudad: e.target.value})}
-                  required
-                />
-                <textarea
-                  placeholder="Dirección completa *"
-                  value={checkoutData.direccion}
-                  onChange={(e) => setCheckoutData({...checkoutData, direccion: e.target.value})}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Referencia (ej: cerca al parque)"
-                  value={checkoutData.referencia}
-                  onChange={(e) => setCheckoutData({...checkoutData, referencia: e.target.value})}
                 />
               </div>
 
@@ -824,7 +782,7 @@ function App() {
                 <h3>Resumen del Pedido</h3>
                 {cartItems.map((item, index) => (
                   <div key={index} className="summary-item">
-                    <span>{item.cantidad}x {item.nombre}</span>
+                    <span>{item.cantidad}x {item.nombre}{item.colorSeleccionado ? ` (${item.colorSeleccionado})` : ''}</span>
                     <span>Bs {(item.precioUnitario * item.cantidad).toFixed(2)}</span>
                   </div>
                 ))}
