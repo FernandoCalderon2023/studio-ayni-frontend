@@ -19,6 +19,7 @@ function Admin() {
   const [precio, setPrecio] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [imagenPrincipal, setImagenPrincipal] = useState(null);
+  const [imagenExistente, setImagenExistente] = useState(null); // URL de imagen actual
   const [colores, setColores] = useState([]);
   const [novedad, setNovedad] = useState(false);
   const [editandoProducto, setEditandoProducto] = useState(null);
@@ -117,6 +118,13 @@ function Admin() {
     setLoading(true);
 
     try {
+      // Validar que haya imagen al crear nuevo producto
+      if (!editandoProducto && !imagenPrincipal) {
+        setError('❌ Debes subir una imagen principal');
+        setLoading(false);
+        return;
+      }
+
       // Subir imágenes de colores primero
       const coloresConImagenes = await Promise.all(
         colores.map(async (color) => {
@@ -134,9 +142,12 @@ function Admin() {
       formData.append('categoria', categoria);
       formData.append('precio', precio);
       formData.append('descripcion', descripcion);
+      
+      // Solo agregar imagen si hay una nueva
       if (imagenPrincipal) {
         formData.append('imagen', imagenPrincipal);
       }
+      
       formData.append('colores', JSON.stringify(coloresConImagenes));
       formData.append('novedad', novedad);
 
@@ -179,6 +190,7 @@ function Admin() {
     setPrecio('');
     setDescripcion('');
     setImagenPrincipal(null);
+    setImagenExistente(null);
     setColores([]);
     setNovedad(false);
     setEditandoProducto(null);
@@ -195,6 +207,7 @@ function Admin() {
     setDescripcion(producto.descripcion);
     setColores(producto.colores || []);
     setNovedad(producto.novedad || false);
+    setImagenExistente(producto.imagen); // Guardar URL de imagen actual
     // Scroll al formulario
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -360,15 +373,35 @@ function Admin() {
             </div>
 
             <div className="form-group">
-              <label>Imagen Principal *</label>
+              <label>Imagen Principal {!editandoProducto && '*'}</label>
+              
+              {editandoProducto && imagenExistente && (
+                <div style={{marginBottom: '1rem', padding: '1rem', background: '#F5F0E8', borderRadius: '6px'}}>
+                  <p style={{marginBottom: '0.5rem', color: '#6B7F3C', fontWeight: 'bold'}}>📷 Imagen actual:</p>
+                  <img 
+                    src={imagenExistente?.startsWith('http') ? imagenExistente : `https://studio-ayni-backend.onrender.com${imagenExistente}`}
+                    alt="Imagen actual"
+                    style={{maxWidth: '200px', height: 'auto', borderRadius: '6px', border: '2px solid #6B7F3C'}}
+                  />
+                  <p style={{marginTop: '0.5rem', fontSize: '0.9rem', color: '#666'}}>
+                    💡 Deja el campo vacío para mantener esta imagen, o sube una nueva para reemplazarla
+                  </p>
+                </div>
+              )}
+              
               <input
                 id="imagen-input"
                 type="file"
                 accept="image/*"
                 onChange={(e) => setImagenPrincipal(e.target.files[0])}
-                required
+                required={!editandoProducto}
               />
-              <p className="help-text">📸 Sube la foto principal del producto</p>
+              <p className="help-text">
+                {editandoProducto 
+                  ? '📸 Opcional: Sube una nueva imagen solo si quieres cambiarla'
+                  : '📸 Sube la foto principal del producto'
+                }
+              </p>
             </div>
 
             <div className="form-group">
