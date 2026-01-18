@@ -306,32 +306,133 @@ function App() {
     }
   };
 
-  const enviarPedidoWhatsApp = () => {
-    const mensaje = cartItems.map((item, index) => {
-      const colorInfo = item.colorSeleccionado ? ` (Color: ${item.colorSeleccionado})` : '';
-      const precioUnitario = item.precioUnitario.toFixed(2);
-      const subtotal = (item.precioUnitario * item.cantidad).toFixed(2);
-      const descuentoInfo = item.cantidad >= 12 ? ' ✨ _10% descuento aplicado_' : '';
+  const enviarPedidoWhatsApp = async () => {
+    console.log('📱 Iniciando envío por WhatsApp...');
+    console.log('Datos del cliente:', checkoutData);
+    console.log('Productos en carrito:', cartItems);
+    console.log('Total:', total);
+    
+    try {
+      // PRIMERO: Guardar pedido en base de datos
+      const pedidoData = {
+        cliente: {
+          nombre: checkoutData.nombre,
+          whatsapp: checkoutData.whatsapp
+        },
+        productos: cartItems.map(item => ({
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio: item.precioUnitario,
+          color: item.colorSeleccionado || '',
+          producto_id: item.id
+        })),
+        total: total,
+        metodoPago: 'whatsapp',
+        estado: 'pedido',
+        estado_pago: 'pendiente'
+      };
       
-      return `*${index + 1}.* ${item.nombre}${colorInfo}\n   • Cantidad: ${item.cantidad} unidad${item.cantidad > 1 ? 'es' : ''}\n   • Precio unitario: Bs ${precioUnitario}\n   • Subtotal: Bs ${subtotal}${descuentoInfo}`;
-    }).join('\n\n');
-    
-    const totalUnidades = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
-    const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
-    
-    // Número de WhatsApp de Studio AYNI
-    const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número (código país + número)
-    
-    // Detectar si es móvil
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // Construir URL según dispositivo
-    const url = isMobile 
-      ? `whatsapp://send?phone=${numeroWhatsApp}&text=${encodeURIComponent(mensajeTotal)}`
-      : `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeTotal)}`;
-    
-    // Abrir WhatsApp
-    window.location.href = url;
+      console.log('📤 Guardando pedido en DB antes de WhatsApp:', pedidoData);
+      
+      const response = await fetch('https://studio-ayni-backend.onrender.com/api/pedidos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pedidoData)
+      });
+
+      console.log('📥 Respuesta del servidor:', response.status, response.statusText);
+      
+      const responseData = await response.json();
+      console.log('📦 Datos de respuesta:', responseData);
+
+      if (response.ok && responseData.success) {
+        console.log('✅ Pedido guardado exitosamente:', responseData.pedido);
+        
+        // SEGUNDO: Preparar mensaje de WhatsApp
+        const mensaje = cartItems.map((item, index) => {
+          const colorInfo = item.colorSeleccionado ? ` (Color: ${item.colorSeleccionado})` : '';
+          const precioUnitario = item.precioUnitario.toFixed(2);
+          const subtotal = (item.precioUnitario * item.cantidad).toFixed(2);
+          const descuentoInfo = item.cantidad >= 12 ? ' ✨ _10% descuento aplicado_' : '';
+          
+          return `*${index + 1}.* ${item.nombre}${colorInfo}\n   • Cantidad: ${item.cantidad} unidad${item.cantidad > 1 ? 'es' : ''}\n   • Precio unitario: Bs ${precioUnitario}\n   • Subtotal: Bs ${subtotal}${descuentoInfo}`;
+        }).join('\n\n');
+        
+        const totalUnidades = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
+        const mensajeTotal = `🛒 *PEDIDO #${responseData.pedido.id} - STUDIO AYNI*\n\nNombre: ${checkoutData.nombre}\nWhatsApp: ${checkoutData.whatsapp}\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Este mensaje confirma tu orden._`;
+        
+        // Número de WhatsApp de Studio AYNI
+        const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número real
+        
+        // Detectar si es móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Construir URL según dispositivo
+        const url = isMobile 
+          ? `whatsapp://send?phone=${numeroWhatsApp}&text=${encodeURIComponent(mensajeTotal)}`
+          : `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeTotal)}`;
+        
+        console.log('📱 Abriendo WhatsApp...');
+        
+        // TERCERO: Abrir WhatsApp
+        window.open(url, '_blank');
+        
+        // CUARTO: Limpiar carrito y cerrar modal
+        setCartItems([]);
+        setCheckoutOpen(false);
+        setCheckoutData({
+          nombre: '',
+          whatsapp: '',
+          metodoPago: 'efectivo'
+        });
+        
+        // Mostrar confirmación
+        alert(`✅ ¡Pedido #${responseData.pedido.id} registrado!\n\nSe abrió WhatsApp para que envíes tu pedido.\n\n¡Gracias por tu compra!`);
+        
+      } else {
+        throw new Error(responseData.error || 'Error al guardar pedido');
+      }
+    } catch (error) {
+      console.error('❌ Error al guardar pedido antes de WhatsApp:', error);
+      
+      // Si falla el guardado, preguntar si quiere continuar solo con WhatsApp
+      const continuar = confirm(`⚠️ No se pudo guardar el pedido en el sistema.\n\nError: ${error.message}\n\n¿Deseas continuar y enviar por WhatsApp de todas formas?\n\n(El pedido NO aparecerá en gestión)`);
+      
+      if (continuar) {
+        // Preparar mensaje de WhatsApp SIN número de pedido
+        const mensaje = cartItems.map((item, index) => {
+          const colorInfo = item.colorSeleccionado ? ` (Color: ${item.colorSeleccionado})` : '';
+          const precioUnitario = item.precioUnitario.toFixed(2);
+          const subtotal = (item.precioUnitario * item.cantidad).toFixed(2);
+          const descuentoInfo = item.cantidad >= 12 ? ' ✨ _10% descuento aplicado_' : '';
+          
+          return `*${index + 1}.* ${item.nombre}${colorInfo}\n   • Cantidad: ${item.cantidad} unidad${item.cantidad > 1 ? 'es' : ''}\n   • Precio unitario: Bs ${precioUnitario}\n   • Subtotal: Bs ${subtotal}${descuentoInfo}`;
+        }).join('\n\n');
+        
+        const totalUnidades = cartItems.reduce((sum, item) => sum + item.cantidad, 0);
+        const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\nNombre: ${checkoutData.nombre}\nWhatsApp: ${checkoutData.whatsapp}\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido._`;
+        
+        const numeroWhatsApp = '59176543210';
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const url = isMobile 
+          ? `whatsapp://send?phone=${numeroWhatsApp}&text=${encodeURIComponent(mensajeTotal)}`
+          : `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensajeTotal)}`;
+        
+        window.open(url, '_blank');
+        
+        // Limpiar carrito
+        setCartItems([]);
+        setCheckoutOpen(false);
+        setCheckoutData({
+          nombre: '',
+          whatsapp: '',
+          metodoPago: 'efectivo'
+        });
+      }
+      // Si NO continúa, no hace nada y el carrito se mantiene
+    }
   };
 
   return (
