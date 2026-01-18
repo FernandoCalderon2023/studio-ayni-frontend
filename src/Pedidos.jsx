@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Edit, Trash2, Package, CheckCircle, Clock, Truck, DollarSign, Search, AlertCircle, Calendar } from 'lucide-react';
+import { X, Plus, Edit, Trash2, Package, CheckCircle, Clock, Truck, DollarSign, Search, AlertCircle, Calendar, GripVertical } from 'lucide-react';
 import './Pedidos.css';
 
 const API_URL = 'https://studio-ayni-backend.onrender.com/api';
@@ -14,6 +14,7 @@ function Pedidos() {
   const [modalPedido, setModalPedido] = useState(null);
   const [modalAgregar, setModalAgregar] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [draggedItem, setDraggedItem] = useState(null);
   
   // Form states para agregar/editar
   const [formData, setFormData] = useState({
@@ -75,6 +76,35 @@ function Pedidos() {
     }
   };
 
+  // Drag and Drop handlers
+  const handleDragStart = (e, pedido) => {
+    setDraggedItem(pedido);
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e) => {
+    e.currentTarget.style.opacity = '1';
+    setDraggedItem(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, nuevoEstado) => {
+    e.preventDefault();
+    
+    if (!draggedItem) return;
+    
+    if (draggedItem.estado !== nuevoEstado) {
+      await cambiarEstado(draggedItem.id, nuevoEstado);
+    }
+    
+    setDraggedItem(null);
+  };
+
   const cambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
       const response = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
@@ -87,9 +117,9 @@ function Pedidos() {
       });
 
       if (response.ok) {
-        setSuccess(`✅ Estado actualizado a ${estados.find(e => e.id === nuevoEstado)?.nombre}`);
+        setSuccess(`✅ Movido a ${estados.find(e => e.id === nuevoEstado)?.nombre}`);
         cargarPedidos();
-        setTimeout(() => setSuccess(''), 3000);
+        setTimeout(() => setSuccess(''), 2000);
       }
     } catch (err) {
       setError('Error al actualizar estado');
@@ -263,7 +293,7 @@ function Pedidos() {
       <div className="pedidos-header">
         <div>
           <h1>📦 Gestión de Pedidos</h1>
-          <p>STUDIO AYNI</p>
+          <p>STUDIO AYNI - 🖱️ Arrastra para mover entre columnas</p>
         </div>
         <button onClick={() => setModalAgregar(true)} className="btn-agregar-pedido">
           <Plus size={20} />
@@ -292,7 +322,12 @@ function Pedidos() {
           const Icon = estado.icon;
           
           return (
-            <div key={estado.id} className="pedidos-columna">
+            <div 
+              key={estado.id} 
+              className="pedidos-columna"
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, estado.id)}
+            >
               <div className="columna-header" style={{ borderTopColor: estado.color }}>
                 <Icon size={20} style={{ color: estado.color }} />
                 <h3>{estado.nombre}</h3>
@@ -301,10 +336,55 @@ function Pedidos() {
               
               <div className="columna-pedidos">
                 {pedidosEstado.length === 0 ? (
-                  <p className="columna-vacia">No hay pedidos</p>
+                  <p className="columna-vacia">Arrastra pedidos aquí</p>
                 ) : (
-                  pedidosEstado.map(pedido => (
-                    <div key={pedido.id} className="pedido-card" onClick={() => abrirModalDetalle(pedido)}>
+                  pedidosEstado.map(pedido => {
+                    const estadoIndex = estados.findIndex(e => e.id === pedido.estado);
+                    const puedeAvanzar = estadoIndex < estados.length - 1;
+                    const puedeRetroceder = estadoIndex > 0;
+                    
+                    return (
+                    <div 
+                      key={pedido.id} 
+                      className="pedido-card"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, pedido)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      {/* Drag handle */}
+                      <div className="drag-handle">
+                        <GripVertical size={16} />
+                      </div>
+                      
+                      {/* Botones de acción rápida */}
+                      <div className="pedido-acciones-rapidas" onClick={(e) => e.stopPropagation()}>
+                        {puedeRetroceder && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              cambiarEstado(pedido.id, estados[estadoIndex - 1].id);
+                            }}
+                            className="btn-accion-rapida btn-retroceder"
+                            title={`Mover a ${estados[estadoIndex - 1].nombre}`}
+                          >
+                            ←
+                          </button>
+                        )}
+                        {puedeAvanzar && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              cambiarEstado(pedido.id, estados[estadoIndex + 1].id);
+                            }}
+                            className="btn-accion-rapida btn-avanzar"
+                            title={`Mover a ${estados[estadoIndex + 1].nombre}`}
+                          >
+                            →
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div onClick={() => abrirModalDetalle(pedido)}>
                       <div className="pedido-card-header">
                         <span className="pedido-id">#{pedido.id}</span>
                         <div style={{display: 'flex', gap: '0.25rem'}}>
@@ -350,8 +430,10 @@ function Pedidos() {
                       <p className="pedido-fecha">
                         {new Date(pedido.created_at).toLocaleDateString('es-BO')}
                       </p>
+                      </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

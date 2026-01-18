@@ -705,3 +705,82 @@ select {
     font-size: 0.7rem;
   }
 }
+/* ============================================ */
+/* AGREGAR AL FINAL DE Pedidos.css */
+/* DRAG AND DROP STYLES */
+/* ============================================ */
+
+/* Drag handle */
+.drag-handle {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 5;
+}
+
+.pedido-card:hover .drag-handle {
+  opacity: 1;
+}
+
+.pedido-card[draggable="true"] {
+  cursor: grab;
+}
+
+.pedido-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Efecto visual al arrastrar */
+.columna-pedidos {
+  min-height: 200px;
+  transition: background-color 0.3s;
+}
+
+.pedidos-columna:has(.columna-pedidos:hover) .columna-pedidos {
+  background-color: rgba(107, 127, 60, 0.05);
+}
+
+/* Indicador de drop zone */
+.columna-vacia {
+  text-align: center;
+  color: #999;
+  padding: 3rem 1rem;
+  font-style: italic;
+  font-size: 0.9rem;
+  border: 2px dashed #DDD;
+  border-radius: 8px;
+  background: #F8F9FA;
+  transition: all 0.3s;
+}
+
+.pedidos-columna:has(.columna-pedidos:hover) .columna-vacia {
+  border-color: #6B7F3C;
+  background: rgba(107, 127, 60, 0.05);
+  color: #6B7F3C;
+  font-weight: 600;
+}
+
+/* Ajustar espacio para drag handle */
+.pedido-card {
+  padding-left: 2rem;
+}
+
+/* Mobile - Drag handle siempre visible */
+@media (max-width: 768px) {
+  .drag-handle {
+    opacity: 1;
+  }
+  
+  .pedido-card {
+    padding-left: 1.75rem;
+  }
+  
+  .drag-handle {
+    left: 0.25rem;
+  }
+}
