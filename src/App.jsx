@@ -233,35 +233,52 @@ function App() {
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('🛒 Iniciando checkout...');
+    console.log('Datos del cliente:', checkoutData);
+    console.log('Productos en carrito:', cartItems);
+    console.log('Total:', total);
+    
     try {
+      // Preparar datos del pedido
+      const pedidoData = {
+        cliente: {
+          nombre: checkoutData.nombre,
+          whatsapp: checkoutData.whatsapp
+        },
+        productos: cartItems.map(item => ({
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio: item.precioUnitario,
+          color: item.colorSeleccionado || '',
+          producto_id: item.id
+        })),
+        total: total,
+        metodoPago: checkoutData.metodoPago,
+        estado: 'pedido',
+        estado_pago: 'pendiente'
+      };
+      
+      console.log('📤 Enviando pedido a backend:', pedidoData);
+      
       // Guardar pedido en base de datos
       const response = await fetch('https://studio-ayni-backend.onrender.com/api/pedidos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          cliente: {
-            nombre: checkoutData.nombre,
-            whatsapp: checkoutData.whatsapp
-          },
-          productos: cartItems.map(item => ({
-            nombre: item.nombre,
-            cantidad: item.cantidad,
-            precio: item.precioUnitario,
-            color: item.colorSeleccionado || '',
-            producto_id: item.id
-          })),
-          total: total,
-          metodoPago: checkoutData.metodoPago,
-          estado: 'pedido',
-          estado_pago: 'pendiente'
-        })
+        body: JSON.stringify(pedidoData)
       });
 
-      if (response.ok) {
+      console.log('📥 Respuesta del servidor:', response.status, response.statusText);
+      
+      const responseData = await response.json();
+      console.log('📦 Datos de respuesta:', responseData);
+
+      if (response.ok && responseData.success) {
+        console.log('✅ Pedido guardado exitosamente:', responseData.pedido);
+        
         // Mostrar mensaje de confirmación
-        alert('✅ ¡Pedido registrado!\n\nEn breve lo contactaremos por WhatsApp para confirmar los detalles de su pedido.\n\n¡Gracias por su compra!');
+        alert(`✅ ¡Pedido #${responseData.pedido.id} registrado exitosamente!\n\nEn breve lo contactaremos por WhatsApp para confirmar los detalles de su pedido.\n\n¡Gracias por su compra!`);
         
         // Limpiar carrito
         setCartItems([]);
@@ -276,20 +293,16 @@ function App() {
           metodoPago: 'efectivo'
         });
       } else {
-        throw new Error('Error al guardar pedido');
+        throw new Error(responseData.error || 'Error al guardar pedido');
       }
     } catch (error) {
-      console.error('Error al crear pedido:', error);
-      alert('⚠️ Pedido registrado localmente.\n\nSe enviará por WhatsApp pero puede que no aparezca en el sistema.\n\nContacta al administrador si es necesario.');
+      console.error('❌ Error completo:', error);
+      console.error('❌ Mensaje de error:', error.message);
+      console.error('❌ Stack:', error.stack);
       
-      // Aún así limpiar el carrito para no bloquear al usuario
-      setCartItems([]);
-      setCheckoutOpen(false);
-      setCheckoutData({
-        nombre: '',
-        whatsapp: '',
-        metodoPago: 'efectivo'
-      });
+      alert(`⚠️ Error al registrar pedido:\n\n${error.message}\n\nPor favor, toma captura de pantalla y contacta al administrador.\n\nDatos del pedido:\nCliente: ${checkoutData.nombre}\nWhatsApp: ${checkoutData.whatsapp}\nTotal: Bs ${total.toFixed(2)}`);
+      
+      // NO limpiar el carrito para que el usuario pueda intentar de nuevo
     }
   };
 
