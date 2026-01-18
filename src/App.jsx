@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Search, X, ChevronLeft, ChevronRight, Instagram, Facebook, Mail, Phone as PhoneIcon, MapPin, ArrowLeft, Plus, Minus, Sparkles, MessageCircle } from 'lucide-react';
 import './App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni.vercel.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://studio-ayni-backend.onrender.com/api';
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -172,31 +172,38 @@ function App() {
     }
 
     // Si tiene colores, agregar cada color seleccionado por separado
+    const nuevosItems = [];
+    const itemsActualizados = [...cartItems];
+    
     Object.entries(coloresSeleccionados).forEach(([colorNombre, cantidad]) => {
       const precioFinal = getPrecioConDescuento(producto.precio, cantidad);
-      const productoConColor = {
-        ...producto,
-        colorSeleccionado: colorNombre,
-        precioUnitario: precioFinal,
-        cantidad: cantidad
-      };
       
-      const existing = cartItems.find(item => 
+      const existingIndex = itemsActualizados.findIndex(item => 
         item.id === producto.id && 
         item.colorSeleccionado === colorNombre
       );
       
-      if (existing) {
-        setCartItems(cartItems.map(item =>
-          item.id === producto.id && item.colorSeleccionado === colorNombre
-            ? { ...item, cantidad: item.cantidad + cantidad, precioUnitario: getPrecioConDescuento(producto.precio, item.cantidad + cantidad) }
-            : item
-        ));
+      if (existingIndex !== -1) {
+        // Actualizar cantidad del item existente
+        const nuevaCantidad = itemsActualizados[existingIndex].cantidad + cantidad;
+        itemsActualizados[existingIndex] = {
+          ...itemsActualizados[existingIndex],
+          cantidad: nuevaCantidad,
+          precioUnitario: getPrecioConDescuento(producto.precio, nuevaCantidad)
+        };
       } else {
-        setCartItems([...cartItems, productoConColor]);
+        // Agregar nuevo item
+        nuevosItems.push({
+          ...producto,
+          colorSeleccionado: colorNombre,
+          precioUnitario: precioFinal,
+          cantidad: cantidad
+        });
       }
     });
     
+    // Actualizar carrito una sola vez con todos los cambios
+    setCartItems([...itemsActualizados, ...nuevosItems]);
     closeProductModal();
   };
 
@@ -257,7 +264,7 @@ function App() {
     const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
     
     // Número de WhatsApp de Studio AYNI
-    const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número (código país + número)
+    const numeroWhatsApp = '59176543210'; // CAMBIA ESTO por tu número (código país + número)
     
     // Detectar si es móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
