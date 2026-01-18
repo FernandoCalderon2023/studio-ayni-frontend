@@ -264,7 +264,7 @@ function App() {
     const mensajeTotal = `🛒 *PEDIDO - STUDIO AYNI*\n\n${mensaje}\n\n━━━━━━━━━━━━━━━\n📦 *Total de productos:* ${totalUnidades}\n💰 *TOTAL A PAGAR: Bs ${total.toFixed(2)}*\n\n_Gracias por tu pedido. Te contactaremos pronto para confirmar los detalles._`;
     
     // Número de WhatsApp de Studio AYNI
-    const numeroWhatsApp = '59176543210'; // CAMBIA ESTO por tu número (código país + número)
+    const numeroWhatsApp = '59176035541'; // CAMBIA ESTO por tu número (código país + número)
     
     // Detectar si es móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
