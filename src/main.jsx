@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import Admin from './Admin';
 import Pedidos from './Pedidos';  // ← AGREGAR
+import AgendaEntregas from './AgendaEntregas';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<App />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/pedidos" element={<Pedidos />} />  {/* ← NUEVA RUTA */}
+        <Route path="/agenda" element={<AgendaEntregas />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

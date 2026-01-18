@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Edit, Trash2, Package, CheckCircle, Clock, Truck, DollarSign, Search } from 'lucide-react';
+import { X, Plus, Edit, Trash2, Package, CheckCircle, Clock, Truck, DollarSign, Search, AlertCircle, Calendar } from 'lucide-react';
 import './Pedidos.css';
 
 const API_URL = 'https://studio-ayni-backend.onrender.com/api';
@@ -7,6 +7,7 @@ const API_URL = 'https://studio-ayni-backend.onrender.com/api';
 function Pedidos() {
   const [token] = useState(localStorage.getItem('token'));
   const [pedidos, setPedidos] = useState([]);
+  const [productos, setProductos] = useState([]); // Inventario
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,7 +24,10 @@ function Pedidos() {
     estadoPago: 'pendiente',
     montoAdelanto: 0,
     estado: 'pedido',
-    notas: ''
+    notas: '',
+    urgente: false,
+    fechaEntrega: '',
+    maquina: ''
   });
 
   const estados = [
@@ -34,9 +38,18 @@ function Pedidos() {
     { id: 'entregado', nombre: 'Entregados', icon: Truck, color: '#6B7F3C' }
   ];
 
+  const maquinas = [
+    'Máquina 1 - Creality K1',
+    'Máquina 2 - Ender 3',
+    'Máquina 3 - Prusa MK3',
+    'Máquina 4 - Anycubic',
+    'Máquina 5 - Creality CR-10'
+  ];
+
   useEffect(() => {
     if (token) {
       cargarPedidos();
+      cargarProductos();
     }
   }, [token]);
 
@@ -49,6 +62,16 @@ function Pedidos() {
       setPedidos(data);
     } catch (err) {
       setError('Error al cargar pedidos');
+    }
+  };
+
+  const cargarProductos = async () => {
+    try {
+      const response = await fetch(`${API_URL}/productos`);
+      const data = await response.json();
+      setProductos(data);
+    } catch (err) {
+      console.error('Error al cargar productos:', err);
     }
   };
 
@@ -85,6 +108,7 @@ function Pedidos() {
       if (response.ok) {
         setSuccess('✅ Pedido eliminado');
         cargarPedidos();
+        setModalPedido(null);
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
@@ -116,7 +140,10 @@ function Pedidos() {
           estado_pago: formData.estadoPago,
           monto_adelanto: formData.montoAdelanto,
           estado: formData.estado,
-          notas: formData.notas
+          notas: formData.notas,
+          urgente: formData.urgente,
+          fecha_entrega: formData.fechaEntrega,
+          maquina: formData.maquina
         })
       });
 
@@ -143,7 +170,10 @@ function Pedidos() {
       estadoPago: pedido.estado_pago || 'pendiente',
       montoAdelanto: pedido.monto_adelanto || 0,
       estado: pedido.estado || 'pedido',
-      notas: pedido.notas || ''
+      notas: pedido.notas || '',
+      urgente: pedido.urgente || false,
+      fechaEntrega: pedido.fecha_entrega ? pedido.fecha_entrega.split('T')[0] : '',
+      maquina: pedido.maquina || ''
     });
   };
 
@@ -158,11 +188,33 @@ function Pedidos() {
       estadoPago: 'pendiente',
       montoAdelanto: 0,
       estado: 'pedido',
-      notas: ''
+      notas: '',
+      urgente: false,
+      fechaEntrega: '',
+      maquina: ''
     });
   };
 
-  const agregarProducto = () => {
+  const agregarProductoDesdeInventario = (productoId) => {
+    const producto = productos.find(p => p.id === parseInt(productoId));
+    if (!producto) return;
+
+    const nuevoProducto = {
+      nombre: producto.nombre,
+      cantidad: 1,
+      precio: parseFloat(producto.precio),
+      color: '',
+      producto_id: producto.id
+    };
+
+    setFormData({
+      ...formData,
+      productos: [...formData.productos, nuevoProducto],
+      total: formData.total + nuevoProducto.precio
+    });
+  };
+
+  const agregarProductoManual = () => {
     setFormData({
       ...formData,
       productos: [...formData.productos, { nombre: '', cantidad: 1, precio: 0, color: '' }]
@@ -255,18 +307,37 @@ function Pedidos() {
                     <div key={pedido.id} className="pedido-card" onClick={() => abrirModalDetalle(pedido)}>
                       <div className="pedido-card-header">
                         <span className="pedido-id">#{pedido.id}</span>
-                        <span className={`pedido-pago ${pedido.estado_pago || 'pendiente'}`}>
-                          {pedido.estado_pago === 'pagado' ? '✓ Pagado' : 
-                           pedido.estado_pago === 'adelanto' ? '◐ Adelanto' : '○ Pendiente'}
-                        </span>
+                        <div style={{display: 'flex', gap: '0.25rem'}}>
+                          {pedido.urgente && (
+                            <span className="pedido-urgente" title="Urgente">
+                              <AlertCircle size={14} />
+                            </span>
+                          )}
+                          <span className={`pedido-pago ${pedido.estado_pago || 'pendiente'}`}>
+                            {pedido.estado_pago === 'pagado' ? '✓' : 
+                             pedido.estado_pago === 'adelanto' ? '◐' : '○'}
+                          </span>
+                        </div>
                       </div>
                       
                       <h4>{pedido.cliente?.nombre || pedido.cliente_nombre || 'Sin nombre'}</h4>
                       <p className="pedido-whatsapp">📱 {pedido.cliente?.whatsapp || pedido.cliente_whatsapp || 'N/A'}</p>
                       
+                      {pedido.fecha_entrega && (
+                        <p className="pedido-entrega">
+                          📅 {new Date(pedido.fecha_entrega).toLocaleDateString('es-BO')}
+                        </p>
+                      )}
+                      
+                      {pedido.maquina && (
+                        <p className="pedido-maquina">
+                          🖨️ {pedido.maquina}
+                        </p>
+                      )}
+                      
                       <div className="pedido-productos-preview">
                         {(pedido.productos || []).slice(0, 2).map((prod, i) => (
-                          <p key={i}>• {prod.cantidad}x {prod.nombre}{prod.colorSeleccionado ? ` (${prod.colorSeleccionado})` : ''}</p>
+                          <p key={i}>• {prod.cantidad}x {prod.nombre}{prod.colorSeleccionado || prod.color ? ` (${prod.colorSeleccionado || prod.color})` : ''}</p>
                         ))}
                         {(pedido.productos || []).length > 2 && <p>+ {pedido.productos.length - 2} más...</p>}
                       </div>
@@ -323,9 +394,27 @@ function Pedidos() {
               <div className="form-section">
                 <div className="section-header">
                   <h3>📦 Productos</h3>
-                  <button type="button" onClick={agregarProducto} className="btn-add-small">
-                    <Plus size={16} /> Agregar
-                  </button>
+                  <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <select 
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          agregarProductoDesdeInventario(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="btn-add-from-inventory"
+                    >
+                      <option value="">+ Desde Inventario</option>
+                      {productos.map(prod => (
+                        <option key={prod.id} value={prod.id}>
+                          {prod.nombre} - Bs {prod.precio}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={agregarProductoManual} className="btn-add-small">
+                      <Plus size={16} /> Manual
+                    </button>
+                  </div>
                 </div>
                 
                 {formData.productos.map((prod, index) => (
@@ -419,6 +508,39 @@ function Pedidos() {
                     required
                   />
                 </div>
+
+                <div>
+                  <label>Máquina de Impresión</label>
+                  <select
+                    value={formData.maquina}
+                    onChange={(e) => setFormData({...formData, maquina: e.target.value})}
+                  >
+                    <option value="">Sin asignar</option>
+                    {maquinas.map((maq, i) => (
+                      <option key={i} value={maq}>{maq}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label>Fecha de Entrega</label>
+                  <input
+                    type="date"
+                    value={formData.fechaEntrega}
+                    onChange={(e) => setFormData({...formData, fechaEntrega: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="checkbox-label-inline">
+                    <input
+                      type="checkbox"
+                      checked={formData.urgente}
+                      onChange={(e) => setFormData({...formData, urgente: e.target.checked})}
+                    />
+                    <span>⚠️ Marcar como Urgente</span>
+                  </label>
+                </div>
               </div>
 
               {/* Notas */}
@@ -491,9 +613,27 @@ function Pedidos() {
               <div className="form-section">
                 <div className="section-header">
                   <h3>📦 Productos</h3>
-                  <button type="button" onClick={agregarProducto} className="btn-add-small">
-                    <Plus size={16} /> Agregar Producto
-                  </button>
+                  <div style={{display: 'flex', gap: '0.5rem'}}>
+                    <select 
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          agregarProductoDesdeInventario(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="btn-add-from-inventory"
+                    >
+                      <option value="">+ Desde Inventario</option>
+                      {productos.map(prod => (
+                        <option key={prod.id} value={prod.id}>
+                          {prod.nombre} - Bs {prod.precio}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={agregarProductoManual} className="btn-add-small">
+                      <Plus size={16} /> Manual
+                    </button>
+                  </div>
                 </div>
                 
                 {formData.productos.length === 0 ? (
@@ -541,7 +681,7 @@ function Pedidos() {
                 )}
               </div>
 
-              {/* Estado de Pago */}
+              {/* Estado de Pago y Configuración */}
               <div className="form-section form-grid">
                 <div>
                   <label>Estado de Pago *</label>
@@ -568,6 +708,39 @@ function Pedidos() {
                     />
                   </div>
                 )}
+
+                <div>
+                  <label>Máquina de Impresión</label>
+                  <select
+                    value={formData.maquina}
+                    onChange={(e) => setFormData({...formData, maquina: e.target.value})}
+                  >
+                    <option value="">Sin asignar</option>
+                    {maquinas.map((maq, i) => (
+                      <option key={i} value={maq}>{maq}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label>Fecha de Entrega</label>
+                  <input
+                    type="date"
+                    value={formData.fechaEntrega}
+                    onChange={(e) => setFormData({...formData, fechaEntrega: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="checkbox-label-inline">
+                    <input
+                      type="checkbox"
+                      checked={formData.urgente}
+                      onChange={(e) => setFormData({...formData, urgente: e.target.checked})}
+                    />
+                    <span>⚠️ Urgente</span>
+                  </label>
+                </div>
               </div>
 
               {/* Total calculado automáticamente */}

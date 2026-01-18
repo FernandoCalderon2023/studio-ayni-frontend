@@ -560,3 +560,148 @@
     justify-content: center;
   }
 }
+/* ============================================ */
+/* AGREGAR AL FINAL DE Pedidos.css */
+/* NUEVAS FUNCIONALIDADES */
+/* ============================================ */
+
+/* Badge de Urgente en tarjeta */
+.pedido-urgente {
+  background: #E63946;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fecha de entrega en tarjeta */
+.pedido-entrega {
+  font-size: 0.8rem;
+  color: #6B7F3C;
+  margin: 0.5rem 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Máquina en tarjeta */
+.pedido-maquina {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0.25rem 0;
+  padding: 0.25rem 0.5rem;
+  background: #F0F0F0;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Selector de inventario */
+.btn-add-from-inventory {
+  padding: 0.5rem 1rem;
+  background: #2A9D8F;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-add-from-inventory:hover {
+  background: #238276;
+}
+
+/* Checkbox inline para urgente */
+.checkbox-label-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  background: #FFF3E0;
+  border-radius: 6px;
+  border: 2px solid #F4A261;
+  transition: all 0.3s;
+}
+
+.checkbox-label-inline:hover {
+  background: #FFE0B2;
+  border-color: #F57C00;
+}
+
+.checkbox-label-inline input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.checkbox-label-inline input[type="checkbox"]:checked + span {
+  font-weight: 700;
+  color: #E63946;
+}
+
+.checkbox-label-inline span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #666;
+  transition: all 0.3s;
+}
+
+/* Mejoras para inputs de fecha */
+input[type="date"] {
+  padding: 0.75rem;
+  border: 1px solid #DDD;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  background: white;
+  cursor: pointer;
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #6B7F3C;
+  box-shadow: 0 0 0 3px rgba(107, 127, 60, 0.1);
+}
+
+/* Selector de máquina mejorado */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+/* Indicadores visuales mejorados */
+.pedido-card.urgente {
+  border-left: 4px solid #E63946;
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.15);
+}
+
+.pedido-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Responsive para nuevos campos */
+@media (max-width: 768px) {
+  .btn-add-from-inventory {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .checkbox-label-inline {
+    padding: 0.5rem;
+  }
+
+  .pedido-maquina,
+  .pedido-entrega {
+    font-size: 0.7rem;
+  }
+}

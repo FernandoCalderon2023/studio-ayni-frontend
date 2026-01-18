@@ -1,0 +1,449 @@
+/* ============================================ */
+/* AGENDA DE ENTREGAS */
+/* ============================================ */
+
+.agenda-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #F5F0E8 0%, #E8DCC8 100%);
+  padding: 2rem;
+}
+
+.agenda-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.agenda-header h1 {
+  font-size: 2rem;
+  color: #264653;
+  margin: 0;
+}
+
+.agenda-header p {
+  color: #6B7F3C;
+  margin: 0.5rem 0 0 0;
+}
+
+.agenda-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-nav {
+  padding: 0.75rem 1.25rem;
+  background: white;
+  border: 2px solid #6B7F3C;
+  color: #6B7F3C;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-nav:hover {
+  background: #6B7F3C;
+  color: white;
+}
+
+.btn-hoy {
+  padding: 0.75rem 1.5rem;
+  background: #6B7F3C;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hoy:hover {
+  background: #556330;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.agenda-info {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.agenda-info h2 {
+  margin: 0 0 1rem 0;
+  color: #264653;
+  font-size: 1.5rem;
+}
+
+.agenda-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.stat-item.urgente {
+  color: #E63946;
+}
+
+/* Calendario Semanal */
+.calendario-semanal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dia-columna {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.dia-columna.dia-hoy {
+  border: 3px solid #6B7F3C;
+  box-shadow: 0 6px 16px rgba(107, 127, 60, 0.3);
+}
+
+.dia-columna.dia-pasado {
+  opacity: 0.6;
+}
+
+.dia-header {
+  padding: 1rem;
+  background: #F8F9FA;
+  border-bottom: 2px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.dia-hoy .dia-header {
+  background: linear-gradient(135deg, #6B7F3C, #556330);
+  color: white;
+}
+
+.dia-nombre {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.dia-numero {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.dia-contador {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #E63946;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dia-entregas {
+  flex: 1;
+  padding: 0.75rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sin-entregas {
+  text-align: center;
+  color: #999;
+  padding: 2rem 1rem;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* Tarjeta de Entrega */
+.entrega-card {
+  background: white;
+  border: 1px solid #E0E0E0;
+  border-left: 4px solid #6B7F3C;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.entrega-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.entrega-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.entrega-id {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.icon-urgente {
+  color: #E63946;
+}
+
+.entrega-cliente {
+  font-weight: 600;
+  color: #264653;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.entrega-maquina {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+}
+
+.entrega-productos {
+  margin-bottom: 0.5rem;
+}
+
+.entrega-productos p {
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0.25rem 0;
+}
+
+.mas-productos {
+  font-size: 0.75rem;
+  color: #999;
+  font-style: italic;
+}
+
+.entrega-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #F0F0F0;
+}
+
+.entrega-estado {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.entrega-estado.pedido {
+  background: #FEE;
+  color: #E63946;
+}
+
+.entrega-estado.confirmado {
+  background: #FFF3E0;
+  color: #F4A261;
+}
+
+.entrega-estado.proceso {
+  background: #E0F2F1;
+  color: #2A9D8F;
+}
+
+.entrega-estado.realizado {
+  background: #E3F2FD;
+  color: #264653;
+}
+
+.entrega-estado.entregado {
+  background: #F1F8E9;
+  color: #6B7F3C;
+}
+
+.entrega-total {
+  font-weight: 700;
+  color: #6B7F3C;
+  font-size: 0.875rem;
+}
+
+/* Próximas Entregas */
+.proximas-entregas {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.proximas-entregas h3 {
+  margin: 0 0 1.5rem 0;
+  color: #264653;
+  font-size: 1.25rem;
+}
+
+.entregas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.entrega-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #F8F9FA;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.entrega-item:hover {
+  background: #F0F0F0;
+  transform: translateX(4px);
+}
+
+.entrega-fecha-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: white;
+  border: 2px solid #6B7F3C;
+  border-radius: 8px;
+  min-width: 80px;
+}
+
+.entrega-fecha-badge span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7F3C;
+  text-align: center;
+}
+
+.entrega-info {
+  flex: 1;
+}
+
+.entrega-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.entrega-titulo strong {
+  color: #264653;
+}
+
+.badge-urgente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #FEE;
+  color: #E63946;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.entrega-detalle {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+.entrega-estado-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .calendario-semanal {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .calendario-semanal {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .agenda-container {
+    padding: 1rem;
+  }
+
+  .agenda-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .agenda-controls {
+    width: 100%;
+  }
+
+  .btn-nav,
+  .btn-hoy {
+    flex: 1;
+  }
+
+  .calendario-semanal {
+    grid-template-columns: 1fr;
+  }
+
+  .dia-columna {
+    min-height: 200px;
+  }
+
+  .entrega-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .entrega-fecha-badge {
+    width: 100%;
+  }
+
+  .entrega-estado-badge {
+    width: 100%;
+    text-align: center;
+  }
+}
