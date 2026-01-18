@@ -475,3 +475,59 @@ html, body, #root {
     height: 80px;
   }
 }
+
+/* ============================================ */
+/* AGREGAR AL FINAL DE Admin.css */
+/* ============================================ */
+
+/* Contenedor de botones de acciones */
+.product-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+/* Botón de editar producto */
+.btn-edit-product {
+  background: #4A90E2;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-edit-product:hover {
+  background: #357ABD;
+  transform: scale(1.05);
+}
+
+/* Actualizar botón de eliminar para que coincida */
+.btn-delete-product {
+  background: #E63946;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-product:hover {
+  background: #C62C37;
+  transform: scale(1.05);
+}
+
+/* Responsive - botones lado a lado en pantallas grandes */
+@media (min-width: 768px) {
+  .product-actions {
+    flex-direction: row;
+  }
+}

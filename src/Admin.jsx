@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Upload, Trash2, LogOut } from 'lucide-react';
+import { X, Upload, Trash2, LogOut, Edit } from 'lucide-react';
 import './Admin.css';
 
 const API_URL = 'https://studio-ayni-backend.onrender.com/api';
@@ -21,6 +21,7 @@ function Admin() {
   const [imagenPrincipal, setImagenPrincipal] = useState(null);
   const [colores, setColores] = useState([]);
   const [novedad, setNovedad] = useState(false);
+  const [editandoProducto, setEditandoProducto] = useState(null);
 
   // Verificar token al cargar
   useEffect(() => {
@@ -123,7 +124,7 @@ function Admin() {
             const url = await uploadColorImage(color.archivoImagen);
             return { nombre: color.nombre, hex: color.hex, imagen: url };
           }
-          return { nombre: color.nombre, hex: color.hex };
+          return { nombre: color.nombre, hex: color.hex, imagen: color.imagen };
         })
       );
 
@@ -133,12 +134,20 @@ function Admin() {
       formData.append('categoria', categoria);
       formData.append('precio', precio);
       formData.append('descripcion', descripcion);
-      formData.append('imagen', imagenPrincipal);
+      if (imagenPrincipal) {
+        formData.append('imagen', imagenPrincipal);
+      }
       formData.append('colores', JSON.stringify(coloresConImagenes));
       formData.append('novedad', novedad);
 
-      const response = await fetch(`${API_URL}/productos`, {
-        method: 'POST',
+      // Decidir si es crear o actualizar
+      const url = editandoProducto 
+        ? `${API_URL}/productos/${editandoProducto}` 
+        : `${API_URL}/productos`;
+      const method = editandoProducto ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
@@ -149,17 +158,10 @@ function Admin() {
         throw new Error(data.error || 'Error al guardar producto');
       }
 
-      setSuccess('✅ Producto agregado exitosamente!');
+      setSuccess(editandoProducto ? '✅ Producto actualizado exitosamente!' : '✅ Producto agregado exitosamente!');
       
       // Limpiar formulario
-      setNombre('');
-      setCategoria('');
-      setPrecio('');
-      setDescripcion('');
-      setImagenPrincipal(null);
-      setColores([]);
-      setNovedad(false);
-      document.getElementById('imagen-input').value = '';
+      limpiarFormulario();
       
       // Recargar productos
       cargarProductos();
@@ -168,6 +170,33 @@ function Admin() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Limpiar formulario
+  const limpiarFormulario = () => {
+    setNombre('');
+    setCategoria('');
+    setPrecio('');
+    setDescripcion('');
+    setImagenPrincipal(null);
+    setColores([]);
+    setNovedad(false);
+    setEditandoProducto(null);
+    const inputImagen = document.getElementById('imagen-input');
+    if (inputImagen) inputImagen.value = '';
+  };
+
+  // Cargar producto para editar
+  const cargarProductoParaEditar = (producto) => {
+    setEditandoProducto(producto.id);
+    setNombre(producto.nombre);
+    setCategoria(producto.categoria);
+    setPrecio(producto.precio);
+    setDescripcion(producto.descripcion);
+    setColores(producto.colores || []);
+    setNovedad(producto.novedad || false);
+    // Scroll al formulario
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Eliminar producto
@@ -271,7 +300,27 @@ function Admin() {
       <div className="admin-content">
         {/* FORMULARIO */}
         <div className="admin-form">
-          <h2>➕ Agregar Producto</h2>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+            <h2>{editandoProducto ? '✏️ Editar Producto' : '➕ Agregar Producto'}</h2>
+            {editandoProducto && (
+              <button 
+                type="button" 
+                onClick={limpiarFormulario}
+                className="btn-cancel"
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#E63946',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                ✖ Cancelar
+              </button>
+            )}
+          </div>
           
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -378,7 +427,7 @@ function Admin() {
             </div>
 
             <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? '⏳ Guardando...' : '✅ Guardar Producto'}
+              {loading ? '⏳ Guardando...' : (editandoProducto ? '✅ Actualizar Producto' : '✅ Guardar Producto')}
             </button>
           </form>
         </div>
@@ -419,12 +468,22 @@ function Admin() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => eliminarProducto(producto.id)}
-                    className="btn-delete-product"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+                  <div className="product-actions">
+                    <button
+                      onClick={() => cargarProductoParaEditar(producto)}
+                      className="btn-edit-product"
+                      title="Editar producto"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      onClick={() => eliminarProducto(producto.id)}
+                      className="btn-delete-product"
+                      title="Eliminar producto"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
