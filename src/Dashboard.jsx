@@ -7,7 +7,6 @@ const API_URL = 'https://studio-ayni-backend.onrender.com/api';
 
 function Dashboard() {
   const navigate = useNavigate();
-  const navigate = useNavigate();
   const [estadisticas, setEstadisticas] = useState({
     totalVentas: 0,
     pedidosNuevos: 0,
