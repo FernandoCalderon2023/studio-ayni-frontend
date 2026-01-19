@@ -1,22 +1,6 @@
-// ============================================
-// AdminUnificado.jsx - VERSIÓN COMPLETA
-// Con Pedidos y Agenda integrados
-// ============================================
-
 import { useState, useEffect } from 'react';
 import { LogOut, Package, ShoppingCart, Calendar, Menu, X, Home } from 'lucide-react';
 import './AdminUnificado.css';
-
-// IMPORTAR TUS COMPONENTES REALES:
-// Paso 1: Asegúrate que estos archivos existan en src/
-// Paso 2: Descomenta estas líneas:
-
-// import Pedidos from './Pedidos-DRAG-DROP';
-// import AgendaEntregas from './AgendaEntregas';
-
-// O si tus archivos tienen otros nombres:
-// import Pedidos from './Pedidos';
-// import AgendaEntregas from './Agenda';
 
 const API_URL = 'https://studio-ayni-backend.onrender.com/api';
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default';
@@ -24,7 +8,7 @@ const CLOUDINARY_CLOUD_NAME = 'dhlqwu0oe';
 
 function AdminUnificado() {
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [vistaActual, setVistaActual] = useState('productos');
+  const [vistaActual, setVistaActual] = useState('productos'); // productos, pedidos, agenda
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   useEffect(() => {
@@ -62,6 +46,7 @@ function AdminUnificado() {
           <button 
             className="sidebar-toggle" 
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            title={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -90,12 +75,19 @@ function AdminUnificado() {
         </nav>
 
         <div className="sidebar-footer">
-          <a href="/" className="sidebar-item">
+          <a 
+            href="/"
+            className="sidebar-item"
+            title="Ir a tienda"
+          >
             <Home size={22} />
             {sidebarOpen && <span>Ir a Tienda</span>}
           </a>
           
-          <button className="sidebar-item logout" onClick={handleLogout}>
+          <button
+            className="sidebar-item logout"
+            onClick={handleLogout}
+          >
             <LogOut size={22} />
             {sidebarOpen && <span>Cerrar Sesión</span>}
           </button>
@@ -105,7 +97,6 @@ function AdminUnificado() {
       {/* Main Content */}
       <main className="admin-main">
         <div className="admin-content">
-          {/* AQUÍ SE RENDERIZAN LAS SECCIONES */}
           {vistaActual === 'productos' && <SeccionProductos token={token} />}
           {vistaActual === 'pedidos' && <SeccionPedidos token={token} />}
           {vistaActual === 'agenda' && <SeccionAgenda token={token} />}
@@ -113,15 +104,18 @@ function AdminUnificado() {
       </main>
 
       {/* Mobile overlay */}
-      {sidebarOpen && window.innerWidth < 768 && (
-        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
     </div>
   );
 }
 
 // ============================================
-// SECCIÓN PRODUCTOS (incluida en este archivo)
+// SECCIÓN PRODUCTOS
 // ============================================
 function SeccionProductos({ token }) {
   const [productos, setProductos] = useState([]);
@@ -283,9 +277,16 @@ function SeccionProductos({ token }) {
               <p className="producto-desc">{producto.descripcion}</p>
               {producto.colores && producto.colores.length > 0 && (
                 <div className="producto-colores">
-                  {producto.colores.map((color, i) => (
-                    <span key={i} className="color-tag">{color}</span>
-                  ))}
+                  {producto.colores.map((color, i) => {
+                    // Manejar tanto strings como objetos
+                    const nombreColor = typeof color === 'string' 
+                      ? color 
+                      : color.nombre || color.hex || 'Color';
+                    
+                    return (
+                      <span key={i} className="color-tag">{nombreColor}</span>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -301,57 +302,105 @@ function SeccionProductos({ token }) {
         ))}
       </div>
 
-      {/* Modal omitido por brevedad - ya está en AdminUnificado.jsx base */}
+      {/* Modal Agregar/Editar */}
+      {modalOpen && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{editando ? 'Editar Producto' : 'Agregar Producto'}</h2>
+              <button onClick={cerrarModal} className="btn-close">×</button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="producto-form">
+              <input
+                type="text"
+                placeholder="Nombre del producto *"
+                value={formData.nombre}
+                onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                required
+              />
+              
+              <textarea
+                placeholder="Descripción *"
+                value={formData.descripcion}
+                onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                required
+                rows="3"
+              />
+              
+              <input
+                type="number"
+                placeholder="Precio (Bs) *"
+                value={formData.precio}
+                onChange={(e) => setFormData({...formData, precio: e.target.value})}
+                step="0.01"
+                required
+              />
+              
+              <div className="form-group">
+                <label>Imagen del producto</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+                {formData.imagen && (
+                  <img src={formData.imagen} alt="Preview" className="image-preview" />
+                )}
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" onClick={cerrarModal} className="btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={loading} className="btn-primary">
+                  {loading ? 'Guardando...' : editando ? 'Actualizar' : 'Crear'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ============================================
-// SECCIÓN PEDIDOS - Importar componente real
+// SECCIÓN PEDIDOS (placeholder - usar tu Pedidos.jsx)
 // ============================================
 function SeccionPedidos({ token }) {
-  // OPCIÓN 1: Usar componente importado (RECOMENDADO)
-  // return <Pedidos />;
-  
-  // OPCIÓN 2: Placeholder temporal
   return (
-    <div className="placeholder-content">
-      <ShoppingCart size={64} color="#2A9D8F" />
-      <h2>Pedidos</h2>
-      <p>Descomenta el import de Pedidos.jsx arriba ⬆️</p>
-      <p>Y reemplaza esta función con: return &lt;Pedidos /&gt;</p>
+    <div className="seccion-pedidos">
+      <div className="seccion-header">
+        <h1>📦 Gestión de Pedidos</h1>
+        <p>Importar componente Pedidos.jsx aquí</p>
+      </div>
+      <div className="placeholder-content">
+        <ShoppingCart size={64} color="#2A9D8F" />
+        <h2>Componente Pedidos</h2>
+        <p>Aquí irá tu componente Pedidos.jsx completo</p>
+      </div>
     </div>
   );
 }
 
 // ============================================
-// SECCIÓN AGENDA - Importar componente real
+// SECCIÓN AGENDA (placeholder - usar tu AgendaEntregas.jsx)
 // ============================================
 function SeccionAgenda({ token }) {
-  // OPCIÓN 1: Usar componente importado (RECOMENDADO)
-  // return <AgendaEntregas />;
-  
-  // OPCIÓN 2: Placeholder temporal
   return (
-    <div className="placeholder-content">
-      <Calendar size={64} color="#F4A261" />
-      <h2>Agenda de Entregas</h2>
-      <p>Descomenta el import de AgendaEntregas.jsx arriba ⬆️</p>
-      <p>Y reemplaza esta función con: return &lt;AgendaEntregas /&gt;</p>
+    <div className="seccion-agenda">
+      <div className="seccion-header">
+        <h1>📅 Agenda de Entregas</h1>
+        <p>Importar componente AgendaEntregas.jsx aquí</p>
+      </div>
+      <div className="placeholder-content">
+        <Calendar size={64} color="#F4A261" />
+        <h2>Componente Agenda</h2>
+        <p>Aquí irá tu componente AgendaEntregas.jsx completo</p>
+      </div>
     </div>
   );
 }
 
 export default AdminUnificado;
-
-// ============================================
-// INSTRUCCIONES DE INTEGRACIÓN RÁPIDA:
-// ============================================
-
-/*
-PASO 1: Descomenta los imports al inicio del archivo (líneas 7-8)
-PASO 2: Reemplaza SeccionPedidos con: return <Pedidos />;
-PASO 3: Reemplaza SeccionAgenda con: return <AgendaEntregas />;
-PASO 4: Guarda el archivo
-PASO 5: ¡Listo! Ya tienes todo integrado
-*/
