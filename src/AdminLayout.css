@@ -210,7 +210,7 @@
 }
 
 /* ============================================ */
-/* MAIN CONTENT - ULTRA FORZADO */
+/* MAIN CONTENT - FORZAR ANCHO COMPLETO */
 /* ============================================ */
 
 .admin-main {
@@ -232,95 +232,178 @@
 .admin-content {
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 100% !important;
   min-height: 100vh !important;
   overflow-x: hidden !important;
   padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* FORZAR TODO HIJO */
+/* FORZAR TODO HIJO A OCUPAR 100% */
+.admin-content > div,
+.admin-content > * {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* FORZAR TODOS LOS ELEMENTOS */
 .admin-content *,
 .admin-main * {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
 
-/* CONTENEDORES PRINCIPALES */
+/* CONTENEDORES PRINCIPALES - OCUPAR TODO */
 .admin-container,
 .pedidos-container,
 .agenda-container,
 .admin-panel,
 div[class*="container"],
-div[class*="panel"] {
+div[class*="panel"],
+section,
+main {
   width: 100% !important;
   max-width: 100% !important;
-  padding: 1rem !important;
-  overflow-x: auto !important;
+  min-width: 100% !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
 }
 
-/* HEADERS */
+/* HEADERS - ANCHO COMPLETO */
 .admin-header,
 .pedidos-header,
 .agenda-header,
 .seccion-header,
+header,
 header[class*="header"] {
   width: 100% !important;
   max-width: 100% !important;
-  padding: 1rem !important;
+  min-width: 100% !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
+  background: #333 !important;
+  color: white !important;
 }
 
-/* GRIDS Y LAYOUTS */
+/* GRIDS - EXPANDIR */
 .productos-grid,
 .pedidos-grid,
 div[class*="grid"] {
   width: 100% !important;
   max-width: 100% !important;
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
-  gap: 1rem !important;
-  overflow-x: visible !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 1.5rem !important;
+  padding: 1.5rem !important;
 }
 
-/* KANBAN DASHBOARD */
+/* KANBAN DASHBOARD - ANCHO COMPLETO */
 .pedidos-dashboard,
 div[class*="dashboard"] {
   width: 100% !important;
   max-width: 100% !important;
-  overflow-x: auto !important;
+  min-width: 100% !important;
   display: flex !important;
   gap: 1rem !important;
-  padding: 1rem !important;
+  padding: 1.5rem !important;
+  overflow-x: auto !important;
+  box-sizing: border-box !important;
 }
 
 .pedidos-columna,
 .columna-pedidos,
 div[class*="columna"] {
-  min-width: 280px !important;
-  max-width: 350px !important;
-  flex: 0 0 auto !important;
+  min-width: 300px !important;
+  flex: 1 1 300px !important;
+  max-width: 400px !important;
 }
 
-/* CALENDARIO SEMANAL */
+/* CALENDARIO - ANCHO COMPLETO */
 .calendario-semanal,
 .agenda-calendar,
 div[class*="calendario"],
 div[class*="calendar"] {
   width: 100% !important;
   max-width: 100% !important;
-  overflow-x: auto !important;
   display: flex !important;
-  gap: 0.5rem !important;
-  padding: 1rem !important;
+  gap: 0.75rem !important;
+  padding: 1.5rem !important;
+  overflow-x: auto !important;
+  box-sizing: border-box !important;
 }
 
 .dia-columna,
 .calendar-day,
 div[class*="dia"],
 div[class*="day"] {
-  min-width: 120px !important;
-  max-width: 180px !important;
-  flex: 0 0 auto !important;
+  min-width: 140px !important;
+  flex: 1 1 140px !important;
+}
+
+/* WRAPPERS Y SECTIONS */
+.content-wrapper,
+.main-content,
+.page-content,
+div[class*="wrapper"],
+div[class*="content"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* FORZAR COMPONENTES RAÍZ (Admin, Pedidos, Agenda) */
+.admin-content > div > div,
+.admin-content > section,
+.admin-content > main,
+.admin-content > article {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  margin: 0 !important;
+}
+
+/* ELIMINAR MAX-WIDTH DE CUALQUIER ELEMENTO */
+.admin-main [style*="max-width"],
+.admin-content [style*="max-width"] {
+  max-width: 100% !important;
+}
+
+/* PANELS Y CARDS */
+.panel,
+.card,
+.box,
+div[class*="panel"],
+div[class*="card"],
+div[class*="box"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* ROWS Y COLUMNS */
+.row,
+.col,
+div[class*="row"],
+div[class*="col"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* FORMS Y CONTROLES */
+form,
+.form,
+.form-group,
+.form-control,
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* FORMS Y INPUTS */
