@@ -27,43 +27,31 @@ function Dashboard() {
 
   const cargarEstadisticas = async () => {
     try {
-      // Obtener token de autenticación
-      const token = localStorage.getItem('token');
+      console.log('📊 Cargando estadísticas...');
       
-      if (!token) {
-        console.error('No hay token de autenticación');
-        // Redirigir al login si no hay token
-        navigate('/admin/login');
-        return;
-      }
-
-      // Cargar pedidos CON TOKEN
-      const resPedidos = await fetch(`${API_URL}/pedidos`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Cargar pedidos SIN autenticación
+      const resPedidos = await fetch(`${API_URL}/pedidos`);
       
-      if (resPedidos.status === 401) {
-        console.error('Token inválido o expirado');
-        localStorage.removeItem('token');
-        navigate('/admin/login');
-        return;
-      }
+      console.log('Response status:', resPedidos.status);
       
       if (!resPedidos.ok) {
-        console.error('Error al cargar pedidos:', resPedidos.status);
+        console.error('❌ Error al cargar pedidos:', resPedidos.status);
+        
+        if (resPedidos.status === 401) {
+          console.error('⚠️ El backend requiere autenticación');
+          console.error('💡 Solución: Hacer el endpoint público o configurar token válido');
+        }
+        
         setLoading(false);
         return;
       }
       
       const pedidos = await resPedidos.json();
-      console.log('Pedidos cargados:', pedidos);
+      console.log('✅ Pedidos cargados:', pedidos);
+      console.log('📦 Total pedidos:', pedidos.length);
 
-      // Si pedidos es un array vacío o no es array
       if (!Array.isArray(pedidos)) {
-        console.error('Pedidos no es un array:', pedidos);
+        console.error('❌ Pedidos no es un array:', pedidos);
         setEstadisticas({
           totalVentas: 0,
           pedidosNuevos: 0,
@@ -78,6 +66,10 @@ function Dashboard() {
         setLoading(false);
         return;
       }
+
+      // Mostrar estados de los pedidos
+      console.log('📊 Estados encontrados:');
+      pedidos.forEach(p => console.log(`  - Estado: "${p.estado}", Total: ${p.total}`));
 
       // Calcular estadísticas
       const totalVentas = pedidos.reduce((sum, p) => {
@@ -105,7 +97,14 @@ function Dashboard() {
         p.estado === 'entregado' || p.estado === 'entregados'
       ).length;
 
-      const visitas = 847; // Simulado - implementar analytics real más adelante
+      console.log('📊 Conteo por estado:');
+      console.log(`  Nuevos: ${pedidosNuevos}`);
+      console.log(`  Confirmados: ${pedidosConfirmados}`);
+      console.log(`  En Proceso: ${pedidosEnProceso}`);
+      console.log(`  Realizados: ${pedidosRealizados}`);
+      console.log(`  Entregados: ${pedidosEntregados}`);
+
+      const visitas = 847;
       const tasaConversion = pedidos.length > 0 ? (pedidos.length / visitas) * 100 : 0;
 
       const stats = {
@@ -121,12 +120,11 @@ function Dashboard() {
         topProductos: calcularTopProductos(pedidos)
       };
 
-      console.log('Estadísticas calculadas:', stats);
+      console.log('✅ Estadísticas calculadas:', stats);
       setEstadisticas(stats);
 
     } catch (error) {
-      console.error('Error cargando estadísticas:', error);
-      // Establecer valores por defecto en caso de error
+      console.error('❌ Error cargando estadísticas:', error);
       setEstadisticas({
         totalVentas: 0,
         pedidosNuevos: 0,
