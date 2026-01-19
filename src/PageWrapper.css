@@ -1,0 +1,72 @@
+/* ============================================ */
+/* PAGE WRAPPER - PÁGINAS CON BOTÓN VOLVER */
+/* ============================================ */
+
+.page-wrapper {
+  min-height: 100vh;
+  background: #F5F5F5;
+}
+
+.page-header {
+  background: white;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #6B7F3C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 1rem;
+}
+
+.btn-volver:hover {
+  background: #556330;
+  transform: translateX(-4px);
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-icon {
+  font-size: 2rem;
+}
+
+.page-title h1 {
+  margin: 0;
+  color: #264653;
+  font-size: 2rem;
+}
+
+.page-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem 2rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1rem;
+  }
+
+  .page-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .page-title h1 {
+    font-size: 1.5rem;
+  }
+}
