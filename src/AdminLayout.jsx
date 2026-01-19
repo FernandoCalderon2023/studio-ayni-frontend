@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Package, ShoppingCart, Calendar, Menu, X, Home, LogOut } from 'lucide-react';
 import './AdminLayout.css';
 
-// IMPORTAR TUS COMPONENTES EXISTENTES:
-import Admin from './Admin';  // Tu gestión de productos actual
-import Pedidos from './Pedidos-DRAG-DROP';  // Tu componente con drag & drop
-import AgendaEntregas from './AgendaEntregas';  // Tu calendario
+import Admin from './Admin';
+import Pedidos from './Pedidos';  // ← AGREGAR
+import AgendaEntregas from './AgendaEntregas';
 
 function AdminLayout() {
   const [vistaActual, setVistaActual] = useState('productos');
