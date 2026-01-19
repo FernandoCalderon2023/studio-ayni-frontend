@@ -28,24 +28,93 @@ function Dashboard() {
     try {
       // Cargar pedidos
       const resPedidos = await fetch(`${API_URL}/pedidos`);
+      
+      if (!resPedidos.ok) {
+        console.error('Error al cargar pedidos:', resPedidos.status);
+        setLoading(false);
+        return;
+      }
+      
       const pedidos = await resPedidos.json();
+      console.log('Pedidos cargados:', pedidos);
+
+      // Si pedidos es un array vacío o no es array
+      if (!Array.isArray(pedidos)) {
+        console.error('Pedidos no es un array:', pedidos);
+        setEstadisticas({
+          totalVentas: 0,
+          pedidosNuevos: 0,
+          pedidosConfirmados: 0,
+          pedidosEnProceso: 0,
+          pedidosRealizados: 0,
+          pedidosEntregados: 0,
+          totalPedidos: 0,
+          visitas: 847,
+          topProductos: []
+        });
+        setLoading(false);
+        return;
+      }
 
       // Calcular estadísticas
+      const totalVentas = pedidos.reduce((sum, p) => {
+        const total = parseFloat(p.total) || 0;
+        return sum + total;
+      }, 0);
+
+      const pedidosNuevos = pedidos.filter(p => 
+        p.estado === 'pedido' || p.estado === 'nuevo' || p.estado === 'pendiente'
+      ).length;
+
+      const pedidosConfirmados = pedidos.filter(p => 
+        p.estado === 'confirmado'
+      ).length;
+
+      const pedidosEnProceso = pedidos.filter(p => 
+        p.estado === 'en_proceso' || p.estado === 'proceso'
+      ).length;
+
+      const pedidosRealizados = pedidos.filter(p => 
+        p.estado === 'realizado' || p.estado === 'completado'
+      ).length;
+
+      const pedidosEntregados = pedidos.filter(p => 
+        p.estado === 'entregado' || p.estado === 'entregados'
+      ).length;
+
+      const visitas = 847; // Simulado - implementar analytics real más adelante
+      const tasaConversion = pedidos.length > 0 ? (pedidos.length / visitas) * 100 : 0;
+
       const stats = {
-        totalVentas: pedidos.reduce((sum, p) => sum + (p.total || 0), 0),
-        pedidosNuevos: pedidos.filter(p => p.estado === 'pedido').length,
-        pedidosConfirmados: pedidos.filter(p => p.estado === 'confirmado').length,
-        pedidosEnProceso: pedidos.filter(p => p.estado === 'en_proceso').length,
-        pedidosRealizados: pedidos.filter(p => p.estado === 'realizado').length,
-        pedidosEntregados: pedidos.filter(p => p.estado === 'entregado').length,
+        totalVentas: totalVentas,
+        pedidosNuevos: pedidosNuevos,
+        pedidosConfirmados: pedidosConfirmados,
+        pedidosEnProceso: pedidosEnProceso,
+        pedidosRealizados: pedidosRealizados,
+        pedidosEntregados: pedidosEntregados,
         totalPedidos: pedidos.length,
-        visitas: Math.floor(Math.random() * 2000) + 500, // Simulado - implementar analytics real
+        visitas: visitas,
+        tasaConversion: tasaConversion,
         topProductos: calcularTopProductos(pedidos)
       };
 
+      console.log('Estadísticas calculadas:', stats);
       setEstadisticas(stats);
+
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
+      // Establecer valores por defecto en caso de error
+      setEstadisticas({
+        totalVentas: 0,
+        pedidosNuevos: 0,
+        pedidosConfirmados: 0,
+        pedidosEnProceso: 0,
+        pedidosRealizados: 0,
+        pedidosEntregados: 0,
+        totalPedidos: 0,
+        visitas: 847,
+        topProductos: []
+      });
     } finally {
       setLoading(false);
     }
@@ -55,21 +124,39 @@ function Dashboard() {
     const conteo = {};
     
     pedidos.forEach(pedido => {
-      if (pedido.productos) {
-        pedido.productos.forEach(prod => {
-          const nombre = prod.nombre || 'Sin nombre';
-          if (!conteo[nombre]) {
-            conteo[nombre] = 0;
-          }
-          conteo[nombre] += prod.cantidad || 1;
-        });
+      // Manejar diferentes estructuras de datos
+      let productos = [];
+      
+      if (Array.isArray(pedido.productos)) {
+        productos = pedido.productos;
+      } else if (Array.isArray(pedido.items)) {
+        productos = pedido.items;
+      } else if (pedido.producto) {
+        productos = [pedido.producto];
       }
+
+      productos.forEach(prod => {
+        // Obtener nombre del producto
+        const nombre = prod.nombre || prod.name || prod.producto || 'Sin nombre';
+        
+        if (!conteo[nombre]) {
+          conteo[nombre] = 0;
+        }
+        
+        // Obtener cantidad
+        const cantidad = parseInt(prod.cantidad) || parseInt(prod.qty) || 1;
+        conteo[nombre] += cantidad;
+      });
     });
 
-    return Object.entries(conteo)
+    // Convertir a array y ordenar
+    const topProductos = Object.entries(conteo)
       .map(([nombre, cantidad]) => ({ nombre, cantidad }))
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, 3);
+
+    console.log('Top productos:', topProductos);
+    return topProductos;
   };
 
   const handleLogout = () => {
@@ -194,7 +281,9 @@ function Dashboard() {
             <div className="metrica-info">
               <h3>Tasa Conversión</h3>
               <p className="metrica-valor">
-                {((estadisticas.totalPedidos / estadisticas.visitas) * 100).toFixed(1)}%
+                {estadisticas.totalPedidos > 0 && estadisticas.visitas > 0
+                  ? ((estadisticas.totalPedidos / estadisticas.visitas) * 100).toFixed(1)
+                  : '0.0'}%
               </p>
               <span className="metrica-sub">Visitas → Pedidos</span>
             </div>
