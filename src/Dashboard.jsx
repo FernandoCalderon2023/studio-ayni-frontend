@@ -7,6 +7,7 @@ const API_URL = 'https://studio-ayni-backend.onrender.com/api';
 
 function Dashboard() {
   const navigate = useNavigate();
+  const navigate = useNavigate();
   const [estadisticas, setEstadisticas] = useState({
     totalVentas: 0,
     pedidosNuevos: 0,
@@ -26,8 +27,30 @@ function Dashboard() {
 
   const cargarEstadisticas = async () => {
     try {
-      // Cargar pedidos
-      const resPedidos = await fetch(`${API_URL}/pedidos`);
+      // Obtener token de autenticación
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No hay token de autenticación');
+        // Redirigir al login si no hay token
+        navigate('/admin/login');
+        return;
+      }
+
+      // Cargar pedidos CON TOKEN
+      const resPedidos = await fetch(`${API_URL}/pedidos`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (resPedidos.status === 401) {
+        console.error('Token inválido o expirado');
+        localStorage.removeItem('token');
+        navigate('/admin/login');
+        return;
+      }
       
       if (!resPedidos.ok) {
         console.error('Error al cargar pedidos:', resPedidos.status);
