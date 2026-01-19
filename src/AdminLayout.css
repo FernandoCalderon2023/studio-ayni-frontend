@@ -1,11 +1,17 @@
 /* ============================================ */
-/* ADMIN LAYOUT - SIDEBAR CON CONTENIDO AJUSTADO */
+/* ADMIN LAYOUT - ULTRA AGRESIVO */
+/* FUERZA TODO A RESPETAR EL ANCHO */
 /* ============================================ */
+
+* {
+  box-sizing: border-box !important;
+}
 
 .admin-layout {
   display: flex;
   min-height: 100vh;
   background: #F5F5F5;
+  overflow-x: hidden !important;
 }
 
 /* ============================================ */
@@ -33,7 +39,6 @@
   width: 80px;
 }
 
-/* Sidebar Header */
 .sidebar-header {
   padding: 1.5rem 1rem;
   border-bottom: 1px solid #E0E0E0;
@@ -105,7 +110,6 @@
   transform: scale(1.05);
 }
 
-/* Sidebar Navigation */
 .sidebar-nav {
   flex: 1;
   padding: 1rem 0.5rem;
@@ -152,7 +156,6 @@
   text-overflow: ellipsis;
 }
 
-/* Tooltip for closed sidebar */
 .sidebar-tooltip {
   position: absolute;
   left: 100%;
@@ -185,7 +188,6 @@
   opacity: 1;
 }
 
-/* Sidebar Footer */
 .sidebar-footer {
   padding: 1rem 0.5rem;
   border-top: 1px solid #E0E0E0;
@@ -199,7 +201,6 @@
   background: rgba(230, 57, 70, 0.1);
 }
 
-/* Sidebar Overlay (mobile) */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -209,133 +210,155 @@
 }
 
 /* ============================================ */
-/* MAIN CONTENT - AJUSTADO */
+/* MAIN CONTENT - ULTRA FORZADO */
 /* ============================================ */
 
 .admin-main {
-  flex: 1;
-  margin-left: 260px;
-  width: calc(100vw - 260px);
-  max-width: calc(100vw - 260px);
-  min-height: 100vh;
-  overflow-x: hidden;
-  transition: all 0.3s ease;
+  position: fixed !important;
+  left: 260px !important;
+  top: 0 !important;
+  width: calc(100vw - 260px) !important;
+  height: 100vh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  transition: left 0.3s ease, width 0.3s ease !important;
 }
 
 .admin-sidebar.closed + .admin-main {
-  margin-left: 80px;
-  width: calc(100vw - 80px);
-  max-width: calc(100vw - 80px);
+  left: 80px !important;
+  width: calc(100vw - 80px) !important;
 }
 
 .admin-content {
-  width: 100%;
-  min-height: 100vh;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-/* Forzar que todo respete el ancho */
-.admin-content > * {
-  min-height: 100vh;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.admin-content * {
-  box-sizing: border-box;
-}
-
-/* ============================================ */
-/* AJUSTES PARA COMPONENTES INTERNOS */
-/* ============================================ */
-
-/* Admin (Productos) */
-.admin-content .admin-container,
-.admin-content .admin-panel {
-  max-width: 100%;
-  padding: 1.5rem;
-  box-sizing: border-box;
-}
-
-/* Pedidos (Kanban) */
-.admin-content .pedidos-container {
-  max-width: 100%;
-  padding: 1.5rem;
-  box-sizing: border-box;
-}
-
-.admin-content .pedidos-dashboard {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-/* Agenda (Calendario) */
-.admin-content .agenda-container {
-  max-width: 100%;
-  padding: 1.5rem;
-  box-sizing: border-box;
-}
-
-.admin-content .calendario-semanal {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-/* Ajustar grids */
-.admin-content .productos-grid,
-.admin-content .pedidos-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-/* Headers de secciones */
-.admin-content .seccion-header,
-.admin-content .admin-header,
-.admin-content .pedidos-header {
-  max-width: 100%;
-  padding: 0 1rem;
-}
-
-/* Forms y modales */
-.admin-content .modal-content {
-  max-width: 90vw;
-  margin: 0 auto;
-}
-
-/* Tablas responsivas */
-.admin-content table {
-  max-width: 100%;
-  overflow-x: auto;
-  display: block;
-}
-
-/* ============================================ */
-/* FIX AGRESIVO - FORZAR ANCHO */
-/* ============================================ */
-
-/* Asegurar que NADA se salga */
-.admin-main *,
-.admin-content * {
+  width: 100% !important;
   max-width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
 }
 
-/* Contenedores principales */
+/* FORZAR TODO HIJO */
+.admin-content *,
+.admin-main * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* CONTENEDORES PRINCIPALES */
 .admin-container,
 .pedidos-container,
 .agenda-container,
-.admin-panel {
+.admin-panel,
+div[class*="container"],
+div[class*="panel"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 1rem !important;
+  overflow-x: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* HEADERS */
+.admin-header,
+.pedidos-header,
+.agenda-header,
+.seccion-header,
+header[class*="header"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* GRIDS Y LAYOUTS */
+.productos-grid,
+.pedidos-grid,
+div[class*="grid"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 1rem !important;
+  overflow-x: visible !important;
+}
+
+/* KANBAN DASHBOARD */
+.pedidos-dashboard,
+div[class*="dashboard"] {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: auto !important;
+  display: flex !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
 }
 
-/* Kanban columns específico */
 .pedidos-columna,
-.columna-pedidos {
-  min-width: 250px;
-  max-width: 350px;
-  flex-shrink: 0;
+.columna-pedidos,
+div[class*="columna"] {
+  min-width: 280px !important;
+  max-width: 350px !important;
+  flex: 0 0 auto !important;
+}
+
+/* CALENDARIO SEMANAL */
+.calendario-semanal,
+.agenda-calendar,
+div[class*="calendario"],
+div[class*="calendar"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  display: flex !important;
+  gap: 0.5rem !important;
+  padding: 1rem !important;
+}
+
+.dia-columna,
+.calendar-day,
+div[class*="dia"],
+div[class*="day"] {
+  min-width: 120px !important;
+  max-width: 180px !important;
+  flex: 0 0 auto !important;
+}
+
+/* FORMS Y INPUTS */
+form,
+.form-group,
+.form-control,
+input,
+select,
+textarea,
+button {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* MODALES */
+.modal-overlay {
+  max-width: 100vw !important;
+}
+
+.modal-content {
+  max-width: min(600px, 90vw) !important;
+  margin: 0 auto !important;
+}
+
+/* TABLAS */
+table {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  display: block !important;
+}
+
+/* CARDS */
+.card,
+.producto-card,
+.pedido-card,
+div[class*="card"] {
+  max-width: 100% !important;
 }
 
 /* ============================================ */
@@ -348,25 +371,28 @@
   }
 
   .admin-main {
-    margin-left: 220px;
-    width: calc(100vw - 220px);
-    max-width: calc(100vw - 220px);
-  }
-
-  .admin-sidebar.closed + .admin-main {
-    margin-left: 70px;
-    width: calc(100vw - 70px);
-    max-width: calc(100vw - 70px);
+    left: 220px !important;
+    width: calc(100vw - 220px) !important;
   }
 
   .admin-sidebar.closed {
     width: 70px;
   }
 
-  .admin-content .admin-container,
-  .admin-content .pedidos-container,
-  .admin-content .agenda-container {
-    padding: 1rem;
+  .admin-sidebar.closed + .admin-main {
+    left: 70px !important;
+    width: calc(100vw - 70px) !important;
+  }
+
+  .admin-container,
+  .pedidos-container,
+  .agenda-container {
+    padding: 0.75rem !important;
+  }
+
+  .pedidos-columna,
+  .dia-columna {
+    min-width: 250px !important;
   }
 }
 
@@ -386,43 +412,43 @@
   }
 
   .admin-main {
-    margin-left: 0 !important;
+    left: 0 !important;
     width: 100vw !important;
-    max-width: 100vw !important;
   }
 
-  .admin-content .admin-container,
-  .admin-content .pedidos-container,
-  .admin-content .agenda-container {
-    padding: 0.75rem;
+  .admin-container,
+  .pedidos-container,
+  .agenda-container {
+    padding: 0.5rem !important;
   }
 
-  .admin-content .seccion-header,
-  .admin-content .admin-header,
-  .admin-content .pedidos-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+  .productos-grid {
+    grid-template-columns: 1fr !important;
   }
 
-  .admin-content .productos-grid,
-  .admin-content .pedidos-grid {
-    grid-template-columns: 1fr;
+  .pedidos-columna,
+  .dia-columna {
+    min-width: 200px !important;
   }
 }
 
 @media (max-width: 480px) {
-  .admin-content .admin-container,
-  .admin-content .pedidos-container,
-  .admin-content .agenda-container {
-    padding: 0.5rem;
+  .admin-container,
+  .pedidos-container,
+  .agenda-container {
+    padding: 0.25rem !important;
   }
 
-  .admin-content h1 {
-    font-size: 1.5rem;
+  h1 {
+    font-size: 1.5rem !important;
   }
 
-  .admin-content h2 {
-    font-size: 1.25rem;
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .pedidos-columna,
+  .dia-columna {
+    min-width: 180px !important;
   }
 }
