@@ -5,6 +5,7 @@ import App from './App';
 import Admin from './Admin';
 import Pedidos from './Pedidos';  // ← AGREGAR
 import AgendaEntregas from './AgendaEntregas';
+import AdminUnificado from './AdminUnificado';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -15,6 +16,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/admin" element={<Admin />} />
         <Route path="/pedidos" element={<Pedidos />} />  {/* ← NUEVA RUTA */}
         <Route path="/agenda" element={<AgendaEntregas />} />
+        <Route path="/admin/panel" element={<AdminUnificado />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
