@@ -1,77 +1,242 @@
-import PageWrapper from './PageWrapper';
-import Admin from './Admin';
-import Pedidos from './Pedidos';
-import AgendaEntregas from './AgendaEntregas';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './index.css';
 
-// Productos con botón volver
-export function ProductosPage() {
-  return (
-    <PageWrapper titulo="Gestión de Productos" icono="📦">
-      <Admin />
-    </PageWrapper>
-  );
+import App from './App';
+import Dashboard from './Dashboard';
+import { ProductosPage, PedidosPage, AgendaPage, EstadisticasPage } from './AdminPages';
+
+// Componente de protección de rutas
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
+  return children;
 }
 
-// Pedidos con botón volver
-export function PedidosPage() {
-  return (
-    <PageWrapper titulo="Gestión de Pedidos" icono="🛒">
-      <Pedidos />
-    </PageWrapper>
-  );
-}
+// Login simple
+function AdminLogin() {
+  const [credentials, setCredentials] = React.useState({
+    username: '',
+    password: ''
+  });
+  const [error, setError] = React.useState('');
 
-// Agenda con botón volver
-export function AgendaPage() {
-  return (
-    <PageWrapper titulo="Agenda de Entregas" icono="📅">
-      <AgendaEntregas />
-    </PageWrapper>
-  );
-}
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (credentials.username === 'fernando' && credentials.password === 'admin123') {
+      localStorage.setItem('token', 'dummy-token');
+      window.location.href = '/admin';
+    } else {
+      setError('Credenciales incorrectas');
+    }
+  };
 
-// Estadísticas (placeholder)
-export function EstadisticasPage() {
   return (
-    <PageWrapper titulo="Estadísticas y Reportes" icono="📊">
-      <div style={{ 
-        padding: '3rem', 
-        textAlign: 'center',
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }}>
+      <div style={{
         background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        padding: '3rem',
+        borderRadius: '16px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        width: '100%',
+        maxWidth: '400px'
       }}>
-        <h2 style={{ color: '#264653', marginBottom: '1rem' }}>
-          📊 Estadísticas Avanzadas
-        </h2>
-        <p style={{ color: '#666', marginBottom: '2rem' }}>
-          Próximamente: Gráficas detalladas, reportes de ventas, análisis de tendencias y más.
-        </p>
-        <div style={{
-          padding: '2rem',
-          background: '#F8F9FA',
-          borderRadius: '8px',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          <p style={{ color: '#999', fontStyle: 'italic', marginBottom: '1rem' }}>
-            Esta sección está en desarrollo. Incluirá:
-          </p>
-          <ul style={{ 
-            textAlign: 'left', 
-            color: '#666',
-            lineHeight: '2',
-            listStyle: 'none',
-            padding: 0
+        <h1 style={{ textAlign: 'center', marginBottom: '2rem', color: '#264653' }}>
+          🔐 Login Admin
+        </h1>
+        
+        {error && (
+          <div style={{
+            padding: '1rem',
+            background: '#FEE',
+            color: '#E63946',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            textAlign: 'center'
           }}>
-            <li>📈 Gráficas de ventas por período</li>
-            <li>💰 Análisis de ingresos</li>
-            <li>👥 Comportamiento de clientes</li>
-            <li>📊 Productos más rentables</li>
-            <li>📅 Tendencias estacionales</li>
-          </ul>
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+              Usuario
+            </label>
+            <input
+              type="text"
+              value={credentials.username}
+              onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #E0E0E0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                boxSizing: 'border-box'
+              }}
+              required
+            />
+          </div>
+          
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+              Contraseña
+            </label>
+            <input
+              type="password"
+              value={credentials.password}
+              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #E0E0E0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                boxSizing: 'border-box'
+              }}
+              required
+            />
+          </div>
+          
+          <button
+            type="submit"
+            style={{
+              width: '100%',
+              padding: '1rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Iniciar Sesión
+          </button>
+        </form>
+        
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', color: '#666' }}>
+          <small>Usuario: fernando / Contraseña: admin123</small>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   );
 }
+
+// Componente principal
+function Main() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Tienda pública */}
+        <Route path="/" element={<App />} />
+        
+        {/* Login */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        {/* Dashboard (protegido) */}
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Páginas admin (protegidas) */}
+        <Route 
+          path="/admin/productos" 
+          element={
+            <ProtectedRoute>
+              <ProductosPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/pedidos" 
+          element={
+            <ProtectedRoute>
+              <PedidosPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/agenda" 
+          element={
+            <ProtectedRoute>
+              <AgendaPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/estadisticas" 
+          element={
+            <ProtectedRoute>
+              <EstadisticasPage />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* 404 */}
+        <Route 
+          path="*" 
+          element={
+            <div style={{
+              minHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              padding: '2rem'
+            }}>
+              <h1 style={{ fontSize: '4rem', margin: '0' }}>404</h1>
+              <p style={{ fontSize: '1.5rem', color: '#666', margin: '1rem 0' }}>
+                Página no encontrada
+              </p>
+              <a 
+                href="/" 
+                style={{
+                  marginTop: '2rem',
+                  padding: '1rem 2rem',
+                  background: '#6B7F3C',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600'
+                }}
+              >
+                Volver al inicio
+              </a>
+            </div>
+          } 
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+// Renderizar
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Main />
+  </React.StrictMode>
+);
