@@ -1,11 +1,7 @@
-// ============================================
-// WRAPPERS PARA PÁGINAS ADMIN
-// ============================================
-
 import PageWrapper from './PageWrapper';
-import Admin from './Admin';  // Tu componente de productos actual
-import Pedidos from './Pedidos';  // Tu componente de pedidos actual
-import AgendaEntregas from './AgendaEntregas';  // Tu componente de agenda actual
+import Admin from './Admin';
+import Pedidos from './Pedidos';
+import AgendaEntregas from './AgendaEntregas';
 
 // Productos con botón volver
 export function ProductosPage() {
@@ -45,7 +41,9 @@ export function EstadisticasPage() {
         borderRadius: '12px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}>
-        <h2 style={{ color: '#264653', marginBottom: '1rem' }}>📊 Estadísticas Avanzadas</h2>
+        <h2 style={{ color: '#264653', marginBottom: '1rem' }}>
+          📊 Estadísticas Avanzadas
+        </h2>
         <p style={{ color: '#666', marginBottom: '2rem' }}>
           Próximamente: Gráficas detalladas, reportes de ventas, análisis de tendencias y más.
         </p>
@@ -56,14 +54,15 @@ export function EstadisticasPage() {
           maxWidth: '600px',
           margin: '0 auto'
         }}>
-          <p style={{ color: '#999', fontStyle: 'italic' }}>
+          <p style={{ color: '#999', fontStyle: 'italic', marginBottom: '1rem' }}>
             Esta sección está en desarrollo. Incluirá:
           </p>
           <ul style={{ 
             textAlign: 'left', 
             color: '#666',
             lineHeight: '2',
-            marginTop: '1rem'
+            listStyle: 'none',
+            padding: 0
           }}>
             <li>📈 Gráficas de ventas por período</li>
             <li>💰 Análisis de ingresos</li>

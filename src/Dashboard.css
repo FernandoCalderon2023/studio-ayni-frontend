@@ -422,6 +422,61 @@
   to { transform: rotate(360deg); }
 }
 
+/* ERROR STATE */
+.dashboard-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  gap: 1.5rem;
+}
+
+.dashboard-error h2 {
+  color: #E63946;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.dashboard-error p {
+  color: #666;
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin: 0;
+}
+
+.btn-retry,
+.btn-home {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-retry {
+  background: #6B7F3C;
+  color: white;
+}
+
+.btn-retry:hover {
+  background: #556330;
+  transform: translateY(-2px);
+}
+
+.btn-home {
+  background: #E0E0E0;
+  color: #333;
+}
+
+.btn-home:hover {
+  background: #D0D0D0;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .dashboard-container {

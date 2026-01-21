@@ -1,234 +1,183 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingCart, Calendar, TrendingUp, ArrowLeft, DollarSign, Users, Eye } from 'lucide-react';
+import { Package, ShoppingCart, Calendar, TrendingUp, DollarSign, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
-const API_URL = 'https://studio-ayni-backend.onrender.com/api';
-
 function Dashboard() {
   const navigate = useNavigate();
-  const [estadisticas, setEstadisticas] = useState({
+  const [datos, setDatos] = useState({
     totalVentas: 0,
-    pedidosNuevos: 0,
-    pedidosConfirmados: 0,
-    pedidosEnProceso: 0,
-    pedidosRealizados: 0,
-    pedidosEntregados: 0,
-    totalPedidos: 0,
-    visitas: 0,
+    nuevos: 0,
+    confirmados: 0,
+    enProceso: 0,
+    realizados: 0,
+    entregados: 0,
+    total: 0,
+    visitas: 847,
     topProductos: []
   });
-  const [loading, setLoading] = useState(true);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    cargarEstadisticas();
+    cargarDatos();
   }, []);
 
-  const cargarEstadisticas = async () => {
-    try {
-      console.log('📊 Cargando estadísticas...');
-      
-      // Cargar pedidos SIN autenticación
-      const resPedidos = await fetch(`${API_URL}/pedidos`);
-      
-      console.log('Response status:', resPedidos.status);
-      
-      if (!resPedidos.ok) {
-        console.error('❌ Error al cargar pedidos:', resPedidos.status);
-        
-        if (resPedidos.status === 401) {
-          console.error('⚠️ El backend requiere autenticación');
-          console.error('💡 Solución: Hacer el endpoint público o configurar token válido');
-        }
-        
-        setLoading(false);
-        return;
-      }
-      
-      const pedidos = await resPedidos.json();
-      console.log('✅ Pedidos cargados:', pedidos);
-      console.log('📦 Total pedidos:', pedidos.length);
-
-      if (!Array.isArray(pedidos)) {
-        console.error('❌ Pedidos no es un array:', pedidos);
-        setEstadisticas({
-          totalVentas: 0,
-          pedidosNuevos: 0,
-          pedidosConfirmados: 0,
-          pedidosEnProceso: 0,
-          pedidosRealizados: 0,
-          pedidosEntregados: 0,
-          totalPedidos: 0,
-          visitas: 847,
-          topProductos: []
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Mostrar estados de los pedidos
-      console.log('📊 Estados encontrados:');
-      pedidos.forEach(p => console.log(`  - Estado: "${p.estado}", Total: ${p.total}`));
-
-      // Calcular estadísticas
-      const totalVentas = pedidos.reduce((sum, p) => {
-        const total = parseFloat(p.total) || 0;
-        return sum + total;
-      }, 0);
-
-      const pedidosNuevos = pedidos.filter(p => 
-        p.estado === 'pedido' || p.estado === 'nuevo' || p.estado === 'pendiente'
-      ).length;
-
-      const pedidosConfirmados = pedidos.filter(p => 
-        p.estado === 'confirmado'
-      ).length;
-
-      const pedidosEnProceso = pedidos.filter(p => 
-        p.estado === 'en_proceso' || p.estado === 'proceso'
-      ).length;
-
-      const pedidosRealizados = pedidos.filter(p => 
-        p.estado === 'realizado' || p.estado === 'completado'
-      ).length;
-
-      const pedidosEntregados = pedidos.filter(p => 
-        p.estado === 'entregado' || p.estado === 'entregados'
-      ).length;
-
-      console.log('📊 Conteo por estado:');
-      console.log(`  Nuevos: ${pedidosNuevos}`);
-      console.log(`  Confirmados: ${pedidosConfirmados}`);
-      console.log(`  En Proceso: ${pedidosEnProceso}`);
-      console.log(`  Realizados: ${pedidosRealizados}`);
-      console.log(`  Entregados: ${pedidosEntregados}`);
-
-      const visitas = 847;
-      const tasaConversion = pedidos.length > 0 ? (pedidos.length / visitas) * 100 : 0;
-
-      const stats = {
-        totalVentas: totalVentas,
-        pedidosNuevos: pedidosNuevos,
-        pedidosConfirmados: pedidosConfirmados,
-        pedidosEnProceso: pedidosEnProceso,
-        pedidosRealizados: pedidosRealizados,
-        pedidosEntregados: pedidosEntregados,
-        totalPedidos: pedidos.length,
-        visitas: visitas,
-        tasaConversion: tasaConversion,
-        topProductos: calcularTopProductos(pedidos)
-      };
-
-      console.log('✅ Estadísticas calculadas:', stats);
-      setEstadisticas(stats);
-
-    } catch (error) {
-      console.error('❌ Error cargando estadísticas:', error);
-      setEstadisticas({
-        totalVentas: 0,
-        pedidosNuevos: 0,
-        pedidosConfirmados: 0,
-        pedidosEnProceso: 0,
-        pedidosRealizados: 0,
-        pedidosEntregados: 0,
-        totalPedidos: 0,
-        visitas: 847,
-        topProductos: []
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calcularTopProductos = (pedidos) => {
-    const conteo = {};
+  async function cargarDatos() {
+    console.log('=== DASHBOARD INICIANDO ===');
     
-    pedidos.forEach(pedido => {
-      // Manejar diferentes estructuras de datos
-      let productos = [];
+    try {
+      // URL del backend
+      const url = 'https://studio-ayni-backend.onrender.com/api/pedidos';
       
-      if (Array.isArray(pedido.productos)) {
-        productos = pedido.productos;
-      } else if (Array.isArray(pedido.items)) {
-        productos = pedido.items;
-      } else if (pedido.producto) {
-        productos = [pedido.producto];
-      }
-
-      productos.forEach(prod => {
-        // Obtener nombre del producto
-        const nombre = prod.nombre || prod.name || prod.producto || 'Sin nombre';
+      // INTENTO 1: Sin token
+      console.log('Intento 1: Cargando sin token...');
+      let respuesta = await fetch(url);
+      console.log('Status:', respuesta.status);
+      
+      // Si da 401, intentar con token
+      if (respuesta.status === 401) {
+        console.log('Intento 2: Cargando con token...');
+        const token = localStorage.getItem('token');
         
-        if (!conteo[nombre]) {
-          conteo[nombre] = 0;
+        if (token) {
+          respuesta = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          console.log('Status con token:', respuesta.status);
+        } else {
+          console.log('No hay token en localStorage');
         }
-        
-        // Obtener cantidad
-        const cantidad = parseInt(prod.cantidad) || parseInt(prod.qty) || 1;
-        conteo[nombre] += cantidad;
+      }
+      
+      // Verificar respuesta
+      if (!respuesta.ok) {
+        throw new Error(`Error ${respuesta.status}`);
+      }
+      
+      // Obtener pedidos
+      const pedidos = await respuesta.json();
+      console.log('✅ Pedidos cargados:', pedidos.length);
+      
+      // Verificar que sea array
+      if (!Array.isArray(pedidos)) {
+        throw new Error('Respuesta no es un array');
+      }
+      
+      // Calcular totales
+      const totalVentas = pedidos.reduce((suma, p) => suma + (Number(p.total) || 0), 0);
+      
+      // Contar por estado
+      const nuevos = pedidos.filter(p => ['pedido', 'nuevo', 'pendiente'].includes(p.estado)).length;
+      const confirmados = pedidos.filter(p => p.estado === 'confirmado').length;
+      const enProceso = pedidos.filter(p => ['en_proceso', 'proceso'].includes(p.estado)).length;
+      const realizados = pedidos.filter(p => ['realizado', 'completado'].includes(p.estado)).length;
+      const entregados = pedidos.filter(p => ['entregado', 'entregados'].includes(p.estado)).length;
+      
+      // Top productos
+      const conteo = {};
+      pedidos.forEach(pedido => {
+        const prods = pedido.productos || [];
+        prods.forEach(p => {
+          const nombre = p.nombre || 'Sin nombre';
+          conteo[nombre] = (conteo[nombre] || 0) + (Number(p.cantidad) || 1);
+        });
       });
-    });
+      
+      const topProductos = Object.entries(conteo)
+        .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+        .sort((a, b) => b.cantidad - a.cantidad)
+        .slice(0, 3);
+      
+      // Guardar datos
+      setDatos({
+        totalVentas,
+        nuevos,
+        confirmados,
+        enProceso,
+        realizados,
+        entregados,
+        total: pedidos.length,
+        visitas: 847,
+        topProductos
+      });
+      
+      console.log('✅ Datos procesados:', {
+        total: pedidos.length,
+        entregados,
+        totalVentas
+      });
+      
+    } catch (err) {
+      console.error('❌ Error:', err.message);
+      setError(err.message);
+    }
+    
+    setCargando(false);
+  }
 
-    // Convertir a array y ordenar
-    const topProductos = Object.entries(conteo)
-      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 3);
-
-    console.log('Top productos:', topProductos);
-    return topProductos;
-  };
-
-  const handleLogout = () => {
+  const salir = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
-  const cards = [
-    { 
-      id: 'productos', 
-      titulo: 'Productos', 
-      icon: Package, 
-      color: '#6B7F3C',
-      descripcion: 'Gestionar catálogo',
-      ruta: '/admin/productos'
-    },
-    { 
-      id: 'pedidos', 
-      titulo: 'Pedidos', 
-      icon: ShoppingCart, 
-      color: '#2A9D8F',
-      descripcion: 'Gestionar órdenes',
-      ruta: '/admin/pedidos',
-      badge: estadisticas.pedidosNuevos
-    },
-    { 
-      id: 'agenda', 
-      titulo: 'Agenda', 
-      icon: Calendar, 
-      color: '#F4A261',
-      descripcion: 'Entregas programadas',
-      ruta: '/admin/agenda'
-    },
-    { 
-      id: 'estadisticas', 
-      titulo: 'Estadísticas', 
-      icon: TrendingUp, 
-      color: '#E76F51',
-      descripcion: 'Análisis y reportes',
-      ruta: '/admin/estadisticas'
-    }
-  ];
-
-  if (loading) {
+  // Pantalla de carga
+  if (cargando) {
     return (
-      <div className="dashboard-loading">
-        <div className="spinner"></div>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1.5rem'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '4px solid #E0E0E0',
+          borderTopColor: '#6B7F3C',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
         <p>Cargando dashboard...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); }}`}</style>
       </div>
     );
   }
 
+  // Pantalla de error
+  if (error) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem',
+        gap: '1.5rem',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ color: '#E63946', fontSize: '2rem' }}>⚠️ Error</h2>
+        <p style={{ color: '#666', maxWidth: '500px' }}>{error}</p>
+        <button onClick={cargarDatos} style={{
+          padding: '1rem 2rem',
+          background: '#6B7F3C',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          fontWeight: '600'
+        }}>
+          🔄 Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  // Dashboard principal
   return (
     <div className="dashboard">
       {/* Header */}
@@ -242,12 +191,8 @@ function Dashboard() {
             </div>
           </div>
           <div className="header-actions">
-            <a href="/" className="btn-tienda">
-              🏠 Ir a Tienda
-            </a>
-            <button onClick={handleLogout} className="btn-logout">
-              Cerrar Sesión
-            </button>
+            <a href="/" className="btn-tienda">🏠 Ir a Tienda</a>
+            <button onClick={salir} className="btn-logout">Cerrar Sesión</button>
           </div>
         </div>
       </header>
@@ -267,7 +212,7 @@ function Dashboard() {
             </div>
             <div className="metrica-info">
               <h3>Total Ventas</h3>
-              <p className="metrica-valor">Bs {estadisticas.totalVentas.toFixed(2)}</p>
+              <p className="metrica-valor">Bs {datos.totalVentas.toFixed(2)}</p>
               <span className="metrica-sub">Acumulado total</span>
             </div>
           </div>
@@ -278,8 +223,8 @@ function Dashboard() {
             </div>
             <div className="metrica-info">
               <h3>Pedidos Totales</h3>
-              <p className="metrica-valor">{estadisticas.totalPedidos}</p>
-              <span className="metrica-sub">{estadisticas.pedidosNuevos} nuevos</span>
+              <p className="metrica-valor">{datos.total}</p>
+              <span className="metrica-sub">{datos.nuevos} nuevos</span>
             </div>
           </div>
 
@@ -289,7 +234,7 @@ function Dashboard() {
             </div>
             <div className="metrica-info">
               <h3>Visitas</h3>
-              <p className="metrica-valor">{estadisticas.visitas}</p>
+              <p className="metrica-valor">{datos.visitas}</p>
               <span className="metrica-sub">Este mes</span>
             </div>
           </div>
@@ -301,9 +246,7 @@ function Dashboard() {
             <div className="metrica-info">
               <h3>Tasa Conversión</h3>
               <p className="metrica-valor">
-                {estadisticas.totalPedidos > 0 && estadisticas.visitas > 0
-                  ? ((estadisticas.totalPedidos / estadisticas.visitas) * 100).toFixed(1)
-                  : '0.0'}%
+                {datos.total > 0 ? ((datos.total / datos.visitas) * 100).toFixed(1) : '0.0'}%
               </p>
               <span className="metrica-sub">Visitas → Pedidos</span>
             </div>
@@ -315,52 +258,64 @@ function Dashboard() {
           <h2>📦 Estado de Pedidos</h2>
           <div className="estados-grid">
             <div className="estado-card nuevos">
-              <span className="estado-numero">{estadisticas.pedidosNuevos}</span>
+              <span className="estado-numero">{datos.nuevos}</span>
               <span className="estado-label">Nuevos</span>
             </div>
             <div className="estado-card confirmados">
-              <span className="estado-numero">{estadisticas.pedidosConfirmados}</span>
+              <span className="estado-numero">{datos.confirmados}</span>
               <span className="estado-label">Confirmados</span>
             </div>
             <div className="estado-card proceso">
-              <span className="estado-numero">{estadisticas.pedidosEnProceso}</span>
+              <span className="estado-numero">{datos.enProceso}</span>
               <span className="estado-label">En Proceso</span>
             </div>
             <div className="estado-card realizados">
-              <span className="estado-numero">{estadisticas.pedidosRealizados}</span>
+              <span className="estado-numero">{datos.realizados}</span>
               <span className="estado-label">Realizados</span>
             </div>
             <div className="estado-card entregados">
-              <span className="estado-numero">{estadisticas.pedidosEntregados}</span>
+              <span className="estado-numero">{datos.entregados}</span>
               <span className="estado-label">Entregados</span>
             </div>
           </div>
         </div>
 
-        {/* Navegación a secciones */}
+        {/* Accesos rápidos */}
         <div className="seccion">
           <h2>🚀 Accesos Rápidos</h2>
           <div className="cards-grid">
-            {cards.map(card => {
-              const Icon = card.icon;
-              return (
-                <div 
-                  key={card.id}
-                  className="nav-card"
-                  onClick={() => navigate(card.ruta)}
-                  style={{ borderTop: `4px solid ${card.color}` }}
-                >
-                  {card.badge > 0 && (
-                    <div className="card-badge">{card.badge}</div>
-                  )}
-                  <div className="card-icon" style={{ background: `${card.color}15` }}>
-                    <Icon size={40} color={card.color} />
-                  </div>
-                  <h3>{card.titulo}</h3>
-                  <p>{card.descripcion}</p>
-                </div>
-              );
-            })}
+            <div className="nav-card" onClick={() => navigate('/admin/productos')} style={{ borderTop: '4px solid #6B7F3C' }}>
+              <div className="card-icon" style={{ background: 'rgba(107, 127, 60, 0.1)' }}>
+                <Package size={40} color="#6B7F3C" />
+              </div>
+              <h3>Productos</h3>
+              <p>Gestionar catálogo</p>
+            </div>
+
+            <div className="nav-card" onClick={() => navigate('/admin/pedidos')} style={{ borderTop: '4px solid #2A9D8F' }}>
+              {datos.nuevos > 0 && <div className="card-badge">{datos.nuevos}</div>}
+              <div className="card-icon" style={{ background: 'rgba(42, 157, 143, 0.1)' }}>
+                <ShoppingCart size={40} color="#2A9D8F" />
+              </div>
+              <h3>Pedidos</h3>
+              <p>Gestionar órdenes</p>
+            </div>
+
+            <div className="nav-card" onClick={() => navigate('/admin/agenda')} style={{ borderTop: '4px solid #F4A261' }}>
+              <div className="card-icon" style={{ background: 'rgba(244, 162, 97, 0.1)' }}>
+                <Calendar size={40} color="#F4A261" />
+              </div>
+              <h3>Agenda</h3>
+              <p>Entregas programadas</p>
+            </div>
+
+            <div className="nav-card" onClick={() => navigate('/admin/estadisticas')} style={{ borderTop: '4px solid #E76F51' }}>
+              <div className="card-icon" style={{ background: 'rgba(231, 111, 81, 0.1)' }}>
+                <TrendingUp size={40} color="#E76F51" />
+              </div>
+              <h3>Estadísticas</h3>
+              <p>Análisis y reportes</p>
+            </div>
           </div>
         </div>
 
@@ -368,18 +323,18 @@ function Dashboard() {
         <div className="seccion">
           <h2>🏆 Top 3 Más Vendidos</h2>
           <div className="top-productos">
-            {estadisticas.topProductos.length > 0 ? (
-              estadisticas.topProductos.map((prod, index) => (
-                <div key={index} className="top-producto-item">
-                  <div className="top-numero">{index + 1}</div>
+            {datos.topProductos.length > 0 ? (
+              datos.topProductos.map((prod, i) => (
+                <div key={i} className="top-producto-item">
+                  <div className="top-numero">{i + 1}</div>
                   <div className="top-info">
                     <h4>{prod.nombre}</h4>
                     <p>{prod.cantidad} unidades vendidas</p>
                   </div>
                   <div className="top-badge">
-                    {index === 0 && '🥇'}
-                    {index === 1 && '🥈'}
-                    {index === 2 && '🥉'}
+                    {i === 0 && '🥇'}
+                    {i === 1 && '🥈'}
+                    {i === 2 && '🥉'}
                   </div>
                 </div>
               ))

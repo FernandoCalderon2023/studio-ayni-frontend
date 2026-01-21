@@ -2,17 +2,13 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './PageWrapper.css';
 
-// Wrapper genérico para páginas admin
 function PageWrapper({ children, titulo, icono }) {
   const navigate = useNavigate();
 
   return (
     <div className="page-wrapper">
       <div className="page-header">
-        <button 
-          className="btn-volver" 
-          onClick={() => navigate('/admin')}
-        >
+        <button className="btn-volver" onClick={() => navigate('/admin')}>
           <ArrowLeft size={20} />
           Volver al Dashboard
         </button>
