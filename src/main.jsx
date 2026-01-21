@@ -18,22 +18,70 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// Login simple
+// Login con backend real
 function AdminLogin() {
   const [credentials, setCredentials] = React.useState({
     username: '',
     password: ''
   });
   const [error, setError] = React.useState('');
+  const [cargando, setCargando] = React.useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setCargando(true);
+    setError('');
     
-    if (credentials.username === 'fernando' && credentials.password === 'admin123') {
-      localStorage.setItem('token', 'dummy-token');
-      window.location.href = '/admin';
-    } else {
-      setError('Credenciales incorrectas');
+    try {
+      console.log('🔐 Intentando login...');
+      
+      // Llamar al backend real
+      const response = await fetch('https://studio-ayni-backend.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password
+        })
+      });
+      
+      console.log('📡 Status:', response.status);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Usuario o contraseña incorrectos');
+        } else {
+          setError(`Error del servidor: ${response.status}`);
+        }
+        setCargando(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ Respuesta del backend:', data);
+      
+      // Verificar que el backend retornó un token
+      if (data.token) {
+        console.log('✅ Token recibido, guardando...');
+        localStorage.setItem('token', data.token);
+        window.location.href = '/admin';
+      } else if (data.access_token) {
+        // Por si el backend usa "access_token" en vez de "token"
+        console.log('✅ Access token recibido, guardando...');
+        localStorage.setItem('token', data.access_token);
+        window.location.href = '/admin';
+      } else {
+        console.error('❌ Backend no retornó token:', data);
+        setError('Error: El servidor no retornó un token válido');
+        setCargando(false);
+      }
+      
+    } catch (err) {
+      console.error('❌ Error de conexión:', err);
+      setError('Error de conexión: ' + err.message);
+      setCargando(false);
     }
   };
 
@@ -113,24 +161,30 @@ function AdminLogin() {
           
           <button
             type="submit"
+            disabled={cargando}
             style={{
               width: '100%',
               padding: '1rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: cargando ? '#999' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               fontSize: '1rem',
               fontWeight: '700',
-              cursor: 'pointer'
+              cursor: cargando ? 'not-allowed' : 'pointer',
+              opacity: cargando ? 0.7 : 1
             }}
           >
-            Iniciar Sesión
+            {cargando ? '⏳ Conectando...' : 'Iniciar Sesión'}
           </button>
         </form>
         
         <div style={{ marginTop: '1.5rem', textAlign: 'center', color: '#666' }}>
           <small>Usuario: fernando / Contraseña: admin123</small>
+        </div>
+        
+        <div style={{ marginTop: '1rem', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
+          <small>Conectando con backend en Render...</small>
         </div>
       </div>
     </div>
