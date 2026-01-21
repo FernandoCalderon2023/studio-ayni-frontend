@@ -33,7 +33,6 @@ function Dashboard() {
       // INTENTO 1: Sin token
       console.log('Intento 1: Cargando sin token...');
       let respuesta = await fetch(url);
-      console.log('Status:', respuesta.status);
       
       // Si da 401, intentar con token
       if (respuesta.status === 401) {
@@ -44,7 +43,6 @@ function Dashboard() {
           respuesta = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          console.log('Status con token:', respuesta.status);
         } else {
           console.log('No hay token en localStorage');
         }
@@ -64,10 +62,28 @@ function Dashboard() {
         throw new Error('Respuesta no es un array');
       }
       
-      // Calcular totales
-      const totalVentas = pedidos.reduce((suma, p) => suma + (Number(p.total) || 0), 0);
+      // --- AQUI ESTA EL CAMBIO ---
+      // Calcular totales SOLO de los que dicen "pagado"
+      const totalVentas = pedidos.reduce((suma, p) => {
+        // Aseguramos que el estado exista y lo pasamos a minúsculas por seguridad
+        const estadoPago = (p.estado_pago || '').toLowerCase();
+        
+        // Si dice 'pagado', sumamos el total
+        if (estadoPago === 'pagado') {
+          return suma + (Number(p.total) || 0);
+        }
+
+        // OPCIONAL: Si quisieras sumar también los "adelantos" de los pendientes,
+        // descomenta las siguientes 3 líneas:
+        // if (estadoPago === 'adelanto') {
+        //   return suma + (Number(p.monto_adelanto) || 0);
+        // }
+        
+        return suma;
+      }, 0);
+      // ---------------------------
       
-      // Contar por estado
+      // Contar por estado (Esto sigue igual)
       const nuevos = pedidos.filter(p => ['pedido', 'nuevo', 'pendiente'].includes(p.estado)).length;
       const confirmados = pedidos.filter(p => p.estado === 'confirmado').length;
       const enProceso = pedidos.filter(p => ['en_proceso', 'proceso'].includes(p.estado)).length;
@@ -100,12 +116,6 @@ function Dashboard() {
         total: pedidos.length,
         visitas: 847,
         topProductos
-      });
-      
-      console.log('✅ Datos procesados:', {
-        total: pedidos.length,
-        entregados,
-        totalVentas
       });
       
     } catch (err) {
@@ -211,9 +221,9 @@ function Dashboard() {
               <DollarSign size={28} color="#6B7F3C" />
             </div>
             <div className="metrica-info">
-              <h3>Total Ventas</h3>
+              <h3>Ingresos (Pagado)</h3>
               <p className="metrica-valor">Bs {datos.totalVentas.toFixed(2)}</p>
-              <span className="metrica-sub">Acumulado total</span>
+              <span className="metrica-sub">Solo cobrados</span>
             </div>
           </div>
 
