@@ -21,7 +21,7 @@ function ProtectedRoute({ children }) {
 // Login con backend real
 function AdminLogin() {
   const [credentials, setCredentials] = React.useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [error, setError] = React.useState('');
@@ -36,13 +36,13 @@ function AdminLogin() {
       console.log('🔐 Intentando login...');
       
       // Llamar al backend real
-      const response = await fetch('https://studio-ayni-backend.onrender.com/api/auth/login', {
+      const response = await fetch('https://studio-ayni-backend.onrender.com/api/login', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-          username: credentials.username,
+          email: credentials.email,
           password: credentials.password
         })
       });
@@ -51,7 +51,7 @@ function AdminLogin() {
       
       if (!response.ok) {
         if (response.status === 401) {
-          setError('Usuario o contraseña incorrectos');
+          setError('Email o contraseña incorrectos');
         } else {
           setError(`Error del servidor: ${response.status}`);
         }
@@ -66,11 +66,6 @@ function AdminLogin() {
       if (data.token) {
         console.log('✅ Token recibido, guardando...');
         localStorage.setItem('token', data.token);
-        window.location.href = '/admin';
-      } else if (data.access_token) {
-        // Por si el backend usa "access_token" en vez de "token"
-        console.log('✅ Access token recibido, guardando...');
-        localStorage.setItem('token', data.access_token);
         window.location.href = '/admin';
       } else {
         console.error('❌ Backend no retornó token:', data);
@@ -121,12 +116,13 @@ function AdminLogin() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-              Usuario
+              Email
             </label>
             <input
-              type="text"
-              value={credentials.username}
-              onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+              type="email"
+              value={credentials.email}
+              onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+              placeholder="admin@ayni.com"
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -180,7 +176,7 @@ function AdminLogin() {
         </form>
         
         <div style={{ marginTop: '1.5rem', textAlign: 'center', color: '#666' }}>
-          <small>Usuario: fernando / Contraseña: admin123</small>
+          <small>Email: admin@ayni.com / Contraseña: admin123</small>
         </div>
         
         <div style={{ marginTop: '1rem', textAlign: 'center', color: '#999', fontSize: '0.85rem' }}>
